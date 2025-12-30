@@ -1,0 +1,83 @@
+doctype html
+html(lang="en")
+    head
+        title PriceWatch
+        meta(charset="utf-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
+        link(href="/css/bootstrap.min.css", rel="stylesheet")
+        link(href="/css/custsom.css", rel="stylesheet")
+        script(src="/js/jquery.min.js")
+        script(src="/js/bootstrap.min.js")
+    body
+        .container
+            //- #message.alert.alert-info
+            //-   p Test
+            .bs-docs-section
+                .row
+                    .col-lg-12
+                        .bs-component
+                            .jumbotron
+                                h1.display-3 PriceWatch
+                            table.table.table-hover
+                                tr
+                                    th(scope="col") Name
+                                    th(scope="col") Url
+                                    th(scope="col") Price
+                                    th(scope="col") Action
+                                        each j in data
+                                            tr
+                                                td #{j.name}
+                                                td #{j.url}
+                                                td #{j.lowestPrice}
+                                                td 
+                                                    //-if eval(j.enabled)
+                                                    //-  button
+                                                    //-    a(onclick="enableJob(" + j.id + ", 'false');") Enabled
+                                                    //-else
+                                                    //-  button
+                                                    //-    a(onclick="enableJob(" + j.id + ", 'true');") Disabled
+                                                    button.btn.btn-primary
+                                                        a(onclick="editJob(" + j.id + ");") Edit
+                                                    //-button.btn.btn-primary
+                                                    //-  a(onclick="deleteJob(" + j.id + ");") Delete
+                            button.button.btn.btn-primary
+                                a(onclick="createJob();") Add
+        .modal.fade#jobDialog
+            .modal-dialog.modal-lg
+                .modal-content
+                    .modal-header
+                        h5.modal-title New PriceWatch Job
+                        button.close(type='button',data-dismiss='modal',aria-label='close')
+                            span(aria-hidden='true') &times;
+                    .modal-body
+                        //- form(method='POST' action='/api/job')
+                        .form-group
+                            .input-group.mb-3
+                                input#id.form-control(type='hidden')
+                                //- if (job.id
+                                    .input-group
+                                        .input-group-prepend
+                                        span.input-group-text Id
+                                        input#id.form-control(type='text')
+
+                                        input#id.form-control(type="hidden", name="postid", value=post.id)
+                                .input-group.mb-3
+                                    .input-group
+                                        .input-group-prepend
+                                        span.input-group-text Name
+                                        input#name.form-control(type='text')
+                                .input-group.mb-3
+                                    .input-group
+                                    .input-group-prepend
+                                        span.input-group-text Url
+                                    input#url.form-control(type='text')
+                                .input-group.mb-3
+                                    .input-group
+                                    .input-group-prepend
+                                        span.input-group-text Selector
+                                    input#selector.form-control(type='text')                    
+                    .modal-footer
+                        button.btn.btn-primary#close Save changes
+                        button.btn.btn-secondary#abort Close
+script
+    include main.js
