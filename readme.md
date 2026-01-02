@@ -82,8 +82,11 @@ docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p
 Unter Windows Docker:
 docker run -d --name pricewatcher -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 pricewatcher:latest
 
---docker stop pricewatcher || true
---docker rm pricewatcher
+docker build -t pricewatcher:latest .
+
+docker rm -f homemanager
+
+docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p 3000:3000 pricewatcher:latest
 
 Das ist Deployment. Kein Kopieren, kein SCP, kein rsync.
 

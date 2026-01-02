@@ -1,8 +1,8 @@
-# 1️⃣ Build Stage
+# Build-Stage
 FROM node:lts-alpine AS build
 WORKDIR /app
 
-# Abhängigkeiten inkl. dev installieren
+# Dev + Prod dependencies installieren
 COPY package*.json ./
 RUN npm ci
 
@@ -12,22 +12,19 @@ COPY . .
 # Build durchführen
 RUN npm run build
 
-# 2️⃣ Runtime Stage
+# Runtime-Stage
 FROM node:lts-alpine
 WORKDIR /app
 
-# Nur Production Dependencies
+# Nur production dependencies
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Build-Artefakte aus der Build-Stage kopieren
+# dist aus Build-Stage übernehmen
 COPY --from=build /app/dist ./dist
 
-# Config als Volume
+# Config Volume
 VOLUME /app/config
 
-# App-Port
-EXPOSE 3000
-
-# Start-Kommando
+# Start
 CMD ["node", "dist/server.js"]
