@@ -77,7 +77,7 @@ Dort:
 -git pull
  
 git clone https://github.com/alexwitzke/homemanager.git
---cd pricewatcher
+cd homemanager
 docker build --pull --rm -f 'Dockerfile' -t 'pricewatcher:latest' '.'
 --docker build -t pricewatcher:latest .
 --docker stop pricewatcher || true
