@@ -6,14 +6,17 @@ import cors from "cors";
 import { type Settings, type BotSettings, WatchItem } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
+import * as path from 'path';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const settingsPath = "./src/config/settings.json";
-const watchlistPath = "./src/config/watchlist.json";
-const botConfigPath = "./src/config/bot.json";
+export const APP_ROOT = process.cwd();
+
+const settingsPath = path.join(APP_ROOT, "config", "settings.json");// "./src/config/settings.json";
+const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
+const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
 
 let watcherTask: NodeJS.Timeout | null = null;
 

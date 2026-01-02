@@ -1,10 +1,20 @@
 FROM node:lts-alpine
+
+# Arbeitsverzeichnis
 WORKDIR /app
 
+# Abhängigkeiten installieren
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev
 
+# Restlichen Code kopieren
 COPY . .
-RUN npm run build
 
+# Konfigurationsverzeichnis als Volume deklarieren
+VOLUME /app/config
+
+# App-Port
+EXPOSE 3000
+
+# Startkommando
 CMD ["node", "dist/server.js"]
