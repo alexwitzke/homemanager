@@ -12,9 +12,16 @@ Kein „Dateien rüberschieben“, kein „auf dem Server rumeditieren“.
 Angenommen:
 
 ```
-my-app/
+app/
 ├─ package.json
 ├─ package-lock.json
+├─ config/
+|  ├─ watchlist.json
+|  ├─ settings.json
+|  └─ bot.js
+├─ src/
+|  ├─ ...
+|  └─ ...
 ├─ server.js
 ├─ Dockerfile
 └─ .dockerignore
