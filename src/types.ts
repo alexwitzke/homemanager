@@ -6,9 +6,13 @@ export type RegexRule = {
 };
 
 export type PriceParsing = {
+    pattern: PriceParsingPattern[];
+    rules: RegexRule[];
+};
+
+export type PriceParsingPattern = {
     name: string;
     matchPattern: string;
-    rules: RegexRule[];
 };
 
 export class WatchItem {
@@ -18,6 +22,7 @@ export class WatchItem {
     url: string;
     selector: string;
     lowestPrice: number;
+    error: string | null;
 };
 
 export type Settings = {

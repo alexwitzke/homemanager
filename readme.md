@@ -39,6 +39,8 @@ COPY package*.json ./
 RUN npm ci --only=production
 # Restlicher Code
 COPY . .
+# Konfigurationsverzeichnis deklarieren
+VOLUME /app/config
 # App-Port
 EXPOSE 3000
 # Startkommando
@@ -53,12 +55,12 @@ Warum das gut ist:
 
 # Schritt 3: Image bauen (lokal oder auf dem Server)
 ```
-docker build -t my-node-app:latest .
+docker build -t homemanager:latest .
 ```
 Test lokal:
 
 ```
-docker run -p 3000:3000 my-node-app
+docker run -p 3000:3000 homemanager
 ```
 Browser → http://localhost:3000
 
@@ -72,12 +74,16 @@ ssh user@server
 Dort:
 
 ```
-git pull
-docker build -t my-node-app:latest .
-docker stop my-node-app || true
-docker rm my-node-app || true
-docker run -d --name my-node-app -p 3000:3000 my-node-app:latest
+-git pull
+cd/mkdir 
+git clone https://github.com/alexwitzke/homemanager.git
+docker build --pull --rm -f 'Dockerfile' -t 'pricewatcher:latest' '.'
+docker build -t homemanager:latest .
+docker stop homemanager || true
+docker rm homemanager
+docker run -d --name homemanager -p 3000:3000 homemanager:latest
 ```
+docker run -d --name homemanager -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 homemanager:latest
 
 Das ist Deployment. Kein Kopieren, kein SCP, kein rsync.
 
@@ -98,9 +104,9 @@ Beides ohne SSH im Container.
 # Debugging & Zugriff (der Ersatz für SSH)
 
 ```
-docker logs -f my-node-app
+docker logs -f homemanager
 
-docker exec -it my-node-app sh
+docker exec -it homemanager sh
 ```
 
 Das ist absichtlich kurzlebig.

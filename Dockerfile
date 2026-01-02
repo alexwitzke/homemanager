@@ -11,4 +11,4 @@ VOLUME /app/config
 # App-Port
 EXPOSE 3000
 # Startkommando
-CMD ["node", "server.js"]
+CMD ["node", "dist/server.js"]

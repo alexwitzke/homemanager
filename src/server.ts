@@ -75,25 +75,25 @@ app.get('/api/jobs', (req, res) => {
     res.json(watchList);
 });
 
-app.get("/watcher/start", (req, res) => {
-    if (watcherTask) {
-        return res.status(400).json({ message: "Watcher läuft bereits" });
-    }
+// app.get("/watcher/start", (req, res) => {
+//     if (watcherTask) {
+//         return res.status(400).json({ message: "Watcher läuft bereits" });
+//     }
 
-    startWatcher();
+//     startWatcher();
 
-    res.json({ message: "Watcher gestartet" });
-});
+//     res.json({ message: "Watcher gestartet" });
+// });
 
-app.get("/watcher/stop", (req, res) => {
-    if (watcherTask) {
-        stopWatcher();
+// app.get("/watcher/stop", (req, res) => {
+//     if (watcherTask) {
+//         stopWatcher();
 
-        return res.json({ message: "Watcher gestoppt" });
-    }
+//         return res.json({ message: "Watcher gestoppt" });
+//     }
 
-    res.status(400).json({ message: "Watcher läuft nicht" });
-});
+//     res.status(400).json({ message: "Watcher läuft nicht" });
+// });
 
 function startWatcher() {
     start();
@@ -104,22 +104,29 @@ function startWatcher() {
     bot.sendMessage(msg_id, `Starting price watcher server...`);
 }
 
-function stopWatcher() {
-    clearInterval(watcherTask);
-    watcherTask = null;
-    bot.sendMessage(msg_id, `Stopping price watcher server...`);
-}
+// function stopWatcher() {
+//     clearInterval(watcherTask);
+//     watcherTask = null;
+//     bot.sendMessage(msg_id, `Stopping price watcher server...`);
+// }
 
 async function start() {
     let watchListRaw = await readFile(watchlistPath, "utf-8");
     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
     for (var item of watchList) {
-        const response = await fetch(item.url);
+        const response = await fetch(item.url, {
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept-Language": "de-DE,de;q=0.9"
+            }
+        });
         const html = await response.text();
 
         if (!response.ok) {
-            throw new Error(`HTTP Fehler: ${response.status}`);
+            const error = new Error(`HTTP Fehler: ${response.status}`);
+            item.error = error.message;
+            throw error;
         }
 
         const dom = new JSDOM(html);
@@ -127,23 +134,27 @@ async function start() {
 
         const rawPrice = document.querySelector(item.selector);
 
-        const parsedPrice = parsePrice(rawPrice?.textContent, settings);
+        try {
+            const parsedPrice = parsePrice(rawPrice?.textContent, settings);
 
-        console.log("Parsing url:\t", item.url);
-        console.log("Raw price:\t", rawPrice?.textContent);
-        console.log("Parsed price:\t", parsedPrice);
+            console.log("Parsing url:\t", item.url);
+            console.log("Parsed price:\t", parsedPrice);
 
-        if (item.lowestPrice == 0) {
-            item.lowestPrice = 1000000;
-        }
+            if (item.lowestPrice == 0) {
+                item.lowestPrice = 1000000;
+            }
 
-        if (parsedPrice < item.lowestPrice) {
-            item.lowestPrice = parsedPrice;
+            if (parsedPrice < item.lowestPrice) {
+                item.lowestPrice = parsedPrice;
 
-            console.log("Neuer Tiefstpreis gefunden!");
-            console.log("Lowest price stored:", item.lowestPrice);
+                console.log("Neuer Tiefstpreis gefunden!");
+                console.log("Lowest price stored:", item.lowestPrice);
 
-            bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+            }
+        } catch (error) {
+            item.error = error.message;
+            bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
         }
 
         console.log("-----");
@@ -152,44 +163,44 @@ async function start() {
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
 
-bot.onText(/\/startPriceWatcher/, (msg, match) => {
-    // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
+// bot.onText(/\/startPriceWatcher/, (msg, match) => {
+//     // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
 
-    //const chatId = msg.chat.id;
+//     //const chatId = msg.chat.id;
 
-    if (msg.from.id != msg_id)
-        return;
+//     if (msg.from.id != msg_id)
+//         return;
 
-    startWatcher();
-});
+//     startWatcher();
+// });
 
-bot.onText(/\/stopPriceWatcher/, (msg, match) => {
-    // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
+// bot.onText(/\/stopPriceWatcher/, (msg, match) => {
+//     // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
 
-    //const chatId = msg.chat.id;
+//     //const chatId = msg.chat.id;
 
-    if (msg.from.id != msg_id)
-        return;
+//     if (msg.from.id != msg_id)
+//         return;
 
-    stopWatcher();
-});
+//     stopWatcher();
+// });
 
-bot.onText(/\/start/, (msg) => {
-    bot.sendMessage(msg.chat.id, "HomeManager menu", {
-        "reply_markup": {
-            "keyboard": [["/startPriceWatcher", "/stopPriceWatcher", "/state"]]
-        }
-    });
-});
+// bot.onText(/\/start/, (msg) => {
+//     bot.sendMessage(msg.chat.id, "HomeManager menu", {
+//         "reply_markup": {
+//             "keyboard": [["/startPriceWatcher", "/stopPriceWatcher", "/state"]]
+//         }
+//     });
+// });
 
-bot.onText(/\/state/, (msg) => {
-    if (watcherTask) {
-        bot.sendMessage(msg.chat.id, "Der Price Watcher läuft.");
-    } else {
-        bot.sendMessage(msg.chat.id, "Der Price Watcher ist gestoppt.");
-    }
-});
+// bot.onText(/\/state/, (msg) => {
+//     if (watcherTask) {
+//         bot.sendMessage(msg.chat.id, "Der Price Watcher läuft.");
+//     } else {
+//         bot.sendMessage(msg.chat.id, "Der Price Watcher ist gestoppt.");
+//     }
+// });
 
-//start();
+startWatcher();
 
 app.listen(3000, () => console.log("Server läuft auf http://localhost:3000"));

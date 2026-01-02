@@ -15,19 +15,19 @@ function parsePrice(raw: string, settings: Settings): number {
     }
 
     for (const parser of settings.priceParser) {
-        const priceRegex = new RegExp(parser.matchPattern);
-        const match = priceRegex.test(raw);
-        //const match = raw.match(parser.matchPattern);
+        for (const pattern of parser.pattern) {
+            const priceRegex = new RegExp(pattern.matchPattern);
+            const match = priceRegex.test(raw);
 
-        if (!match) {
-            continue;
+            if (match) {
+                const normalized = applyRegexRules(raw, parser.rules);
+                const value = Number(normalized);
+                if (Number.isNaN(value)) {
+                    throw new Error(`Ungültiger Preis: "${raw}"`);
+                }
+                return value;
+            }
         }
-        const normalized = applyRegexRules(raw, parser.rules);
-        const value = Number(normalized);
-        if (Number.isNaN(value)) {
-            throw new Error(`Ungültiger Preis: "${raw}"`);
-        }
-        return value;
     }
     throw new Error(`Kein passendes Preisformat gefunden für: "${raw}"`);
 }
