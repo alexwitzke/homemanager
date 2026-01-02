@@ -94,51 +94,56 @@ async function start() {
     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
     for (var item of watchList) {
-        const response = await fetch(item.url, {
-            headers: {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Accept-Language": "de-DE,de;q=0.9"
-            }
-        });
-        const html = await response.text();
-
-        if (!response.ok) {
-            const error = new Error(`HTTP Fehler: ${response.status}`);
-            item.error = error.message;
-            throw error;
-        }
-
-        const dom = new JSDOM(html);
-        const document = dom.window.document;
-
-        const rawPrice = document.querySelector(item.selector);
-
         try {
-            const parsedPrice = parsePrice(rawPrice?.textContent, settings);
+            const response = await fetch(item.url, {
+                headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept-Language": "de-DE,de;q=0.9"
+                }
+            });
+            const html = await response.text();
 
-            console.log("Parsing url:\t", item.url);
-            console.log("Parsed price:\t", parsedPrice);
-
-            if (item.lowestPrice == 0) {
-                item.lowestPrice = 1000000;
+            if (!response.ok) {
+                const error = new Error(`HTTP Fehler: ${response.status}`);
+                item.error = error.message;
+                throw error;
             }
 
-            if (parsedPrice < item.lowestPrice) {
-                item.lowestPrice = parsedPrice;
+            const dom = new JSDOM(html);
+            const document = dom.window.document;
 
-                console.log("Neuer Tiefstpreis gefunden!");
-                console.log("Lowest price stored:", item.lowestPrice);
+            const rawPrice = document.querySelector(item.selector);
 
-                bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+            try {
+                const parsedPrice = parsePrice(rawPrice?.textContent, settings);
+
+                console.log("Parsing url:\t", item.url);
+                console.log("Parsed price:\t", parsedPrice);
+
+                if (item.lowestPrice == 0) {
+                    item.lowestPrice = 1000000;
+                }
+
+                if (parsedPrice < item.lowestPrice) {
+                    item.lowestPrice = parsedPrice;
+
+                    console.log("Neuer Tiefstpreis gefunden!");
+                    console.log("Lowest price stored:", item.lowestPrice);
+
+                    bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                }
+            } catch (error) {
+                item.error = error.message;
+                bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
             }
         } catch (error) {
             item.error = error.message;
-            bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
+            console.log("Fehler beim Abrufen der URL:", item.url);
+            console.log("Fehlerdetails:", error.message);
         }
 
         console.log("-----");
     }
-
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
 
