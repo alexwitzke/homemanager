@@ -74,17 +74,16 @@ ssh user@server
 Dort:
 
 ```
--git pull
- 
 git clone https://github.com/alexwitzke/homemanager.git
 cd homemanager
 docker build --pull --rm -f 'Dockerfile' -t 'pricewatcher:latest' '.'
---docker build -t pricewatcher:latest .
---docker stop pricewatcher || true
---docker rm pricewatcher
 docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p 3000:3000 pricewatcher:latest
 ```
+Unter Windows Docker:
 docker run -d --name pricewatcher -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 pricewatcher:latest
+
+--docker stop pricewatcher || true
+--docker rm pricewatcher
 
 Das ist Deployment. Kein Kopieren, kein SCP, kein rsync.
 
