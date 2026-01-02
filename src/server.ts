@@ -75,26 +75,6 @@ app.get('/api/jobs', (req, res) => {
     res.json(watchList);
 });
 
-// app.get("/watcher/start", (req, res) => {
-//     if (watcherTask) {
-//         return res.status(400).json({ message: "Watcher läuft bereits" });
-//     }
-
-//     startWatcher();
-
-//     res.json({ message: "Watcher gestartet" });
-// });
-
-// app.get("/watcher/stop", (req, res) => {
-//     if (watcherTask) {
-//         stopWatcher();
-
-//         return res.json({ message: "Watcher gestoppt" });
-//     }
-
-//     res.status(400).json({ message: "Watcher läuft nicht" });
-// });
-
 function startWatcher() {
     start();
     watcherTask = setInterval(() => {
@@ -103,12 +83,6 @@ function startWatcher() {
     }, settings.intervallInMinutes * 60 * 1000);
     bot.sendMessage(msg_id, `Starting price watcher server...`);
 }
-
-// function stopWatcher() {
-//     clearInterval(watcherTask);
-//     watcherTask = null;
-//     bot.sendMessage(msg_id, `Stopping price watcher server...`);
-// }
 
 async function start() {
     let watchListRaw = await readFile(watchlistPath, "utf-8");
@@ -162,44 +136,6 @@ async function start() {
 
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
-
-// bot.onText(/\/startPriceWatcher/, (msg, match) => {
-//     // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
-
-//     //const chatId = msg.chat.id;
-
-//     if (msg.from.id != msg_id)
-//         return;
-
-//     startWatcher();
-// });
-
-// bot.onText(/\/stopPriceWatcher/, (msg, match) => {
-//     // 'msg' is the received Message from Telegram 'match' is the result of executing the regexp above on the text content of the message
-
-//     //const chatId = msg.chat.id;
-
-//     if (msg.from.id != msg_id)
-//         return;
-
-//     stopWatcher();
-// });
-
-// bot.onText(/\/start/, (msg) => {
-//     bot.sendMessage(msg.chat.id, "HomeManager menu", {
-//         "reply_markup": {
-//             "keyboard": [["/startPriceWatcher", "/stopPriceWatcher", "/state"]]
-//         }
-//     });
-// });
-
-// bot.onText(/\/state/, (msg) => {
-//     if (watcherTask) {
-//         bot.sendMessage(msg.chat.id, "Der Price Watcher läuft.");
-//     } else {
-//         bot.sendMessage(msg.chat.id, "Der Price Watcher ist gestoppt.");
-//     }
-// });
 
 startWatcher();
 
