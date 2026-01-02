@@ -1,7 +1,7 @@
 FROM node:lts-alpine
-WORKDIR /app
+WORKDIR /app/dist
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
 VOLUME /app/config
-CMD ["node", "dist/server.js"]
+CMD ["node", "server.js"]
