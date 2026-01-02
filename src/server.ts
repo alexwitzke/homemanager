@@ -14,6 +14,8 @@ app.use(express.json());
 
 export const APP_ROOT = process.cwd();
 
+console.log("App root:", APP_ROOT);
+
 const settingsPath = path.join(APP_ROOT, "config", "settings.json");// "./src/config/settings.json";
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
 const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
