@@ -75,15 +75,16 @@ Dort:
 
 ```
 -git pull
-cd/mkdir 
+ 
 git clone https://github.com/alexwitzke/homemanager.git
+--cd pricewatcher
 docker build --pull --rm -f 'Dockerfile' -t 'pricewatcher:latest' '.'
-docker build -t homemanager:latest .
-docker stop homemanager || true
-docker rm homemanager
-docker run -d --name homemanager -p 3000:3000 homemanager:latest
+--docker build -t pricewatcher:latest .
+--docker stop pricewatcher || true
+--docker rm pricewatcher
+docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p 3000:3000 pricewatcher:latest
 ```
-docker run -d --name homemanager -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 homemanager:latest
+docker run -d --name pricewatcher -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 pricewatcher:latest
 
 Das ist Deployment. Kein Kopieren, kein SCP, kein rsync.
 
