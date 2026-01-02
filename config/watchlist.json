@@ -1,0 +1,56 @@
+[
+    {
+        "id": 0,
+        "name": "Bambu Lab H2C Laser",
+        "active": true,
+        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767498",
+        "selector": ".bbl-grey-13.bbl-title-3.font-bold",
+        "lowestPrice": 2799,
+        "error": null
+    },
+    {
+        "id": 1,
+        "name": "Bambu Lab H2C",
+        "active": true,
+        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767493",
+        "selector": ".bbl-grey-13.bbl-title-3.font-bold",
+        "lowestPrice": 0,
+        "error": null
+    },
+    {
+        "id": 2,
+        "name": "Amazon Spindel 500W",
+        "active": false,
+        "url": "https://www.amazon.de/gp/product/B09DD132RT?smid=A2KIR130CICOJZ&psc=1",
+        "selector": ".aok-offscreen",
+        "lowestPrice": 0,
+        "error": null
+    },
+    {
+        "id": 3,
+        "name": "Idealo Lenovo Monitor",
+        "active": false,
+        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
+        "selector": ".oopStage-conditionButton-wrapper-text-price",
+        "lowestPrice": 0,
+        "error": null
+    },
+    {
+        "id": 4,
+        "name": "Idealo Lenovo PC1 für Leo",
+        "active": false,
+        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/208052601_-loq-tower-gen-10-26adr10-91df002lgf-lenovo.html",
+        "selector": ".oopStage-conditionButton-wrapper-text-price",
+        "lowestPrice": 0,
+        "error": "Kein Preis angegeben"
+    },
+    {
+        "id": 4,
+        "name": "Idealo Lenovo PC2 für Leo",
+        "active": false,
+        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/208668768_-loq-tower-gen-10-26adr10-91df0012gf-lenovo.html",
+        "selector": ".oopStage-conditionButton-wrapper-text-price",
+        "lowestPrice": 0,
+        "error": "Kein Preis angegeben"
+    }
+]

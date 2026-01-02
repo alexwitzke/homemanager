@@ -38,40 +38,40 @@ node_modules
 # Schritt 2: Dockerfile (Node.js LTS, produktionsnah)
 
 ```
-FROM node:lts-alpine
-# App-Verzeichnis
+# Build-Stage
+FROM node:lts-alpine AS build
 WORKDIR /app
-# Abhängigkeiten zuerst (Cache-freundlich)
+
+# Dev + Prod dependencies installieren
 COPY package*.json ./
-RUN npm ci --only=production
-# Restlicher Code
+RUN npm ci
+
+# Code kopieren
 COPY . .
-# Konfigurationsverzeichnis deklarieren
+
+# Build durchführen
+RUN npm run build
+
+# Runtime-Stage
+FROM node:lts-alpine
+WORKDIR /app
+
+# Nur production dependencies
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# dist aus Build-Stage übernehmen
+COPY --from=build /app/dist ./dist
+
+# Config Volume
 VOLUME /app/config
-# App-Port
-EXPOSE 3000
-# Startkommando
-CMD ["node", "server.js"]
-```
 
-Warum das gut ist:
-    • reproduzierbar
-    • schnell (Layer-Caching)
-    • kein Ballast
-    • identisch auf Laptop, Server, CI
-
-# Schritt 3: Image bauen (lokal oder auf dem Server)
-```
-docker build -t homemanager:latest .
-```
-Test lokal:
+# Start
+CMD ["node", "dist/server.js"]
 
 ```
-docker run -p 3000:3000 homemanager
-```
-Browser → http://localhost:3000
 
-# Schritt 4: Deployment auf den Server (ohne SSH in den Container)
+# Schritt 3: Deployment auf den Server (ohne SSH in den Container)
 Du verbindest dich per SSH auf den Server, nicht in den Container:
 
 ```
@@ -83,8 +83,7 @@ Dort:
 ```
 git clone https://github.com/alexwitzke/homemanager.git
 cd homemanager
-docker build --pull --rm -f 'Dockerfile' -t 'pricewatcher:latest' '.'
-docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p 3000:3000 pricewatcher:latest
+docker build -t pricewatcher:latest .
 ```
 Unter Windows Docker:
 docker run -d --name pricewatcher -v C:\Users\alex\price_watcher\src\config:/app/config -p 3000:3000 pricewatcher:latest
@@ -95,22 +94,6 @@ docker rm -f homemanager
 
 docker run -d --name homemanager -v /mnt/user/appdata/homemanager:/app/config -p 3000:3000 pricewatcher:latest
 
-Das ist Deployment. Kein Kopieren, kein SCP, kein rsync.
-
-# Schritt 5: VS Code Integration (ohne Container-SSH)
-
-Option A: VS Code → Remote-SSH → Server
-    • VS Code verbindet sich per SSH mit dem Server
-    • Du arbeitest direkt im Repo
-    • Terminal → Docker-Befehle
-    • Debuggen über Logs / Ports
-Option B: VS Code Docker Extension
-    • Container starten/stoppen
-    • Logs anschauen
-    • docker exec Terminal öffnen
-    • Images bauen per Klick
-Beides ohne SSH im Container.
-
 # Debugging & Zugriff (der Ersatz für SSH)
 
 ```
@@ -119,23 +102,3 @@ docker logs -f homemanager
 docker exec -it homemanager sh
 ```
 
-Das ist absichtlich kurzlebig.
-Container sollen ersetzt, nicht gepflegt werden.
-
-# Warum das der „beste Weg“ ist
-
-    • Deployment ist deterministisch
-    • Kein Zustand „im Container“
-    • Rollbacks sind trivial (docker run old-image)
-    • CI/CD-ready
-    • Keine unnötige Angriffsfläche
-
-Oder philosophisch:
-    Ein Container ist ein Sandwich, kein Kühlschrank.
-    Man baut ihn, isst ihn, wirft ihn weg und macht einen neuen.
-
-Als nächster sinnvoller Schritt könnten wir:
-    • das Ganze mit docker compose glätten
-    • Hot-Reload für Entwicklung zeigen
-    • oder Debugging aus VS Code direkt in den Container erklären
-Alles baut auf Weg 1 auf – der Rest sind Komfortschichten.
