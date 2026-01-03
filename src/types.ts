@@ -16,12 +16,14 @@ export type PriceParsingPattern = {
 };
 
 export class WatchItem {
+    kind: "JSON" | "HTML" = "HTML";
     id: number;
     name: string;
     active: boolean;
     url: string;
+    alertUrl?: string;
     selector: string;
-    lowestPrice: number;
+    lowestPrice?: number;
     error: string | null;
 };
 

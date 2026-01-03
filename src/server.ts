@@ -7,6 +7,7 @@ import { type Settings, type BotSettings, WatchItem } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
 import * as path from 'path';
+import { JSONPath } from 'jsonpath-plus';
 
 const app = express();
 app.use(cors());
@@ -95,15 +96,14 @@ async function start() {
         if (!item.active) {
             continue;
         }
-        
-        try {            
+
+        try {
             const response = await fetch(item.url, {
                 headers: {
                     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                     "Accept-Language": "de-DE,de;q=0.9"
                 }
             });
-            const html = await response.text();
 
             if (!response.ok) {
                 const error = new Error(`HTTP Fehler: ${response.status}`);
@@ -111,32 +111,54 @@ async function start() {
                 throw error;
             }
 
-            const dom = new JSDOM(html);
-            const document = dom.window.document;
+            if (item.kind === "JSON") {
+                const data = await response.text();
+                const obj = JSON.parse(data);
 
-            const rawPrice = document.querySelector(item.selector);
-
-            try {
-                const parsedPrice = parsePrice(rawPrice?.textContent, settings);
-
-                console.log("Parsing url:\t", item.url);
-                console.log("Parsed price:\t", parsedPrice);
-
-                if (item.lowestPrice == 0) {
-                    item.lowestPrice = 1000000;
+                const result = JSONPath({
+                    path: item.selector,
+                    json: obj
+                });
+                
+                if (result[0].length > 0) {
+                    bot.sendMessage(msg_id, `AIDA Innenkabine verfügbar! Jetzt buchen:\n${item.alertUrl}`);
                 }
 
-                if (parsedPrice < item.lowestPrice) {
-                    item.lowestPrice = parsedPrice;
+                //console.log("JSON Data:", result[0]);
+            } else if (item.kind === "HTML") {
+                const html = await response.text();
 
-                    console.log("Neuer Tiefstpreis gefunden!");
-                    console.log("Lowest price stored:", item.lowestPrice);
+                const dom = new JSDOM(html);
+                const document = dom.window.document;
 
-                    bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                const rawPrice = document.querySelector(item.selector);
+
+                // if (!rawPrice) {
+                //     throw new Error(`Selector nicht gefunden: ${item.selector}`);
+                // }
+
+                try {
+                    const parsedPrice = parsePrice(rawPrice?.textContent, settings);
+
+                    console.log("Parsing url:\t", item.url);
+                    console.log("Parsed price:\t", parsedPrice);
+
+                    if (item.lowestPrice == 0) {
+                        item.lowestPrice = 1000000;
+                    }
+
+                    if (parsedPrice < item.lowestPrice) {
+                        item.lowestPrice = parsedPrice;
+
+                        console.log("Neuer Tiefstpreis gefunden!");
+                        console.log("Lowest price stored:", item.lowestPrice);
+
+                        bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                    }
+                } catch (error) {
+                    item.error = error.message;
+                    bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
                 }
-            } catch (error) {
-                item.error = error.message;
-                bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
             }
         } catch (error) {
             item.error = error.message;
@@ -149,6 +171,7 @@ async function start() {
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
 
-startWatcher();
+await start();
+//startWatcher();
 
-app.listen(3000, () => console.log("Server läuft auf http://localhost:3000"));
+//app.listen(3000, () => console.log("Server läuft auf http://localhost:3000"));
