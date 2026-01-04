@@ -18,7 +18,7 @@ RUN npm run build
 # Runtime-Stage
 # ---------------------------
 # Wir nehmen das Playwright-Basisimage für Node + Browser
-FROM mcr.microsoft.com/playwright:v1.42.0-focal AS runtime
+FROM mcr.microsoft.com/playwright:v1.57.0-focal AS runtime
 WORKDIR /app
 
 # Nur production dependencies
