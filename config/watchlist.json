@@ -7,7 +7,7 @@
         "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
         "alertUrl": "https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0",
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
-        "error": "\"[object Object]\" is not valid JSON"
+        "error": ""
     },
     {
         "kind": "HTML",

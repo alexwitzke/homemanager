@@ -106,7 +106,9 @@ async function start() {
         }
 
         try {
+            console.log("Now:\t", new Date().toLocaleString());
             if (item.kind === "JSON") {
+                console.log("Start JSON job for item:", item.name);
                 console.log("Parsing url:\t", item.url);
 
                 const context = await browser.newContext({
@@ -142,6 +144,8 @@ async function start() {
 
                 //console.log("JSON Data:", result[0]);
             } else if (item.kind === "HTML") {
+                console.log("Start HTML job for item:", item.name);
+                
                 const response = await fetch(item.url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 ...',
