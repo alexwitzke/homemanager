@@ -130,8 +130,8 @@ async function start() {
                 }, item.url);
 
                 const result = JSONPath({
-                    //path: item.selector,
-                    path: "$..cabinItemsVariant[?(@.cabinName=='Suite')].ind.prices",
+                    path: item.selector,
+                    //path: "$..cabinItemsVariant[?(@.cabinName=='Suite')].ind.prices",
                     json: data
                 });
 
