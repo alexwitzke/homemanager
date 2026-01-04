@@ -17,51 +17,24 @@ RUN npm run build
 # ---------------------------
 # Runtime-Stage
 # ---------------------------
-# Wir nehmen das Playwright-Basisimage für Node + Browser
+# Playwright Image passend zur Version 1.57.0
 FROM mcr.microsoft.com/playwright:v1.57.0-focal AS runtime
 WORKDIR /app
 
-# Nur production dependencies
+# Production dependencies installieren
 COPY package*.json ./
 RUN npm ci --omit=dev
 
 # dist aus Build-Stage übernehmen
 COPY --from=build /app/dist ./dist
 
+# Optional: Node / Chromium Flags für stabilere Playwright-Launches
+ENV NODE_ENV=production
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+
 # Config Volume
 VOLUME /app/config
 
-# Start
+# Default Start
 CMD ["node", "dist/server.js"]
-
-
-# # Build-Stage
-# FROM node:lts-alpine AS build
-# WORKDIR /app
-
-# # Dev + Prod dependencies installieren
-# COPY package*.json ./
-# RUN npm ci
-
-# # Code kopieren
-# COPY . .
-
-# # Build durchführen
-# RUN npm run build
-
-# # Runtime-Stage
-# FROM node:lts-alpine
-# WORKDIR /app
-
-# # Nur production dependencies
-# COPY package*.json ./
-# RUN npm ci --omit=dev
-
-# # dist aus Build-Stage übernehmen
-# COPY --from=build /app/dist ./dist
-
-# # Config Volume
-# VOLUME /app/config
-
-# # Start
-# CMD ["node", "dist/server.js"]
