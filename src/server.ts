@@ -10,6 +10,8 @@ import * as path from 'path';
 import { JSONPath } from 'jsonpath-plus';
 import { firefox } from 'playwright';
 
+export const APP_ROOT = process.cwd();
+
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -21,9 +23,7 @@ const browser = await firefox.launch({
     // ]
 });
 
-export const APP_ROOT = process.cwd();
-
-const settingsPath = path.join(APP_ROOT, "config", "settings.json");// "./src/config/settings.json";
+const settingsPath = path.join(APP_ROOT, "config", "settings.json");
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
 const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
 
@@ -138,25 +138,25 @@ async function start() {
                 });
 
                 if (result[0].length > 0) {
-                    console.log("Innenkabine verfügbar!", item.alertUrl);
-                    bot.sendMessage(msg_id, `AIDA Innenkabine verfügbar! Jetzt buchen:\n${item.alertUrl}`);
+                    console.log("Job alert\t", item.alertUrl);
+                    bot.sendMessage(msg_id, `Job alert!\n${item.alertUrl}`);
                 }
 
                 //console.log("JSON Data:", result[0]);
             } else if (item.kind === "HTML") {
                 console.log("Start HTML job for item:", item.name);
-                
+
                 const response = await fetch(item.url, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 ...',
                         'Accept': 'application/json',
                         'Accept-Language': 'de-DE,de;q=0.9',
-                        'Referer': 'https://www.aida.de/',
+                        'Referer': 'https://www.google.de/',
                     }
                 });
 
                 if (!response.ok) {
-                    const error = new Error(`HTTP Fehler: ${response.status}`);
+                    const error = new Error(`HTTP Error: ${response.status}`);
                     item.error = error.message;
                     throw error;
                 }
@@ -206,7 +206,7 @@ async function start() {
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
 
-await start();
-//startWatcher();
+//await start();
+startWatcher();
 
 //app.listen(3000, () => console.log("Server läuft auf http://localhost:3000"));
