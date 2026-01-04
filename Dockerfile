@@ -18,7 +18,7 @@ RUN npm run build
 # Runtime-Stage
 # ---------------------------
 # Playwright Image passend zur Version 1.57.0
-FROM mcr.microsoft.com/playwright:v1.57.0-focal AS runtime
+FROM mcr.microsoft.com/playwright:v1.57.0-noble AS runtime
 WORKDIR /app
 
 # Production dependencies installieren
