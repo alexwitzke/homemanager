@@ -100,13 +100,16 @@ async function start() {
     let watchListRaw = await readFile(watchlistPath, "utf-8");
     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
+    console.log("-----");
+    console.log("Start run at:\t", new Date().toLocaleString('de', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }));
+    console.log("-----");
+
     for (var item of watchList) {
         if (!item.active) {
             continue;
         }
 
         try {
-            console.log("Now:\t", new Date().toLocaleString());
             if (item.kind === "JSON") {
                 console.log("Start JSON job for item:", item.name);
                 console.log("Parsing url:\t", item.url);
@@ -206,7 +209,6 @@ async function start() {
     await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
 }
 
-//await start();
 startWatcher();
 
 //app.listen(3000, () => console.log("Server läuft auf http://localhost:3000"));
