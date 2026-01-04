@@ -8,10 +8,18 @@ import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
 import * as path from 'path';
 import { JSONPath } from 'jsonpath-plus';
+import { firefox } from 'playwright';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const browser = await firefox.launch({
+    headless: true,   // false zum Debuggen
+    // args: [
+    //     '--disable-http2'
+    // ]
+});
 
 export const APP_ROOT = process.cwd();
 
@@ -98,34 +106,57 @@ async function start() {
         }
 
         try {
-            const response = await fetch(item.url, {
-                headers: {
-                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                    "Accept-Language": "de-DE,de;q=0.9"
-                }
-            });
-
-            if (!response.ok) {
-                const error = new Error(`HTTP Fehler: ${response.status}`);
-                item.error = error.message;
-                throw error;
-            }
-
             if (item.kind === "JSON") {
-                const data = await response.text();
-                const obj = JSON.parse(data);
+                console.log("Parsing url:\t", item.url);
+
+                const context = await browser.newContext({
+                    locale: 'de-DE',
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    timezoneId: 'Europe/Berlin',
+                    viewport: { width: 1366, height: 768 }
+                });
+
+                const page = await context.newPage();
+
+                await page.goto(item.alertUrl, {
+                    waitUntil: 'networkidle'
+                });
+
+                const data = await page.evaluate(async (url) => {
+                    const res = await fetch(url, {
+                        credentials: 'include'
+                    });
+                    return res.json();
+                }, item.url);
 
                 const result = JSONPath({
-                    path: item.selector,
-                    json: obj
+                    //path: item.selector,
+                    path: "$..cabinItemsVariant[?(@.cabinName=='Suite')].ind.prices",
+                    json: data
                 });
-                
+
                 if (result[0].length > 0) {
+                    console.log("Innenkabine verfügbar!", item.alertUrl);
                     bot.sendMessage(msg_id, `AIDA Innenkabine verfügbar! Jetzt buchen:\n${item.alertUrl}`);
                 }
 
                 //console.log("JSON Data:", result[0]);
             } else if (item.kind === "HTML") {
+                const response = await fetch(item.url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 ...',
+                        'Accept': 'application/json',
+                        'Accept-Language': 'de-DE,de;q=0.9',
+                        'Referer': 'https://www.aida.de/',
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = new Error(`HTTP Fehler: ${response.status}`);
+                    item.error = error.message;
+                    throw error;
+                }
+
                 const html = await response.text();
 
                 const dom = new JSDOM(html);
