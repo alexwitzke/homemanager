@@ -171,10 +171,6 @@ async function start() {
 
                 const rawPrice = document.querySelector(item.selector);
 
-                // if (!rawPrice) {
-                //     throw new Error(`Selector nicht gefunden: ${item.selector}`);
-                // }
-
                 try {
                     const parsedPrice = parsePrice(rawPrice?.textContent, settings);
 

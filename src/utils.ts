@@ -16,19 +16,20 @@ function parsePrice(raw: string, settings: Settings): number {
 
     for (const parser of settings.priceParser) {
         for (const pattern of parser.pattern) {
-            const priceRegex = new RegExp(pattern.matchPattern);
-            const match = priceRegex.test(raw);
+            const match = raw.match(pattern.matchPattern);
 
-            if (match) {
-                const normalized = applyRegexRules(raw, parser.rules);
-                const value = Number(normalized);
-                if (Number.isNaN(value)) {
-                    throw new Error(`Ungültiger Preis: "${raw}"`);
-                }
-                return value;
+            if (!match) continue;
+
+            const normalized = applyRegexRules(match[0], parser.rules);
+            const value = Number(normalized);
+            if (Number.isNaN(value)) {
+                throw new Error(`Ungültiger Preis: "${raw}"`);
             }
+
+            return value;
         }
     }
+    
     throw new Error(`Kein passendes Preisformat gefunden für: "${raw}"`);
 }
 
