@@ -36,3 +36,37 @@ export type BotSettings = {
     botMessageId: number;
     token: string;
 };
+
+export abstract class BaseJob {
+    abstract kind: string;
+    id: number;
+    name: string;
+    active: boolean;
+    error: string | null;
+    selector: string;
+    url: string;
+};
+
+export class HtmlJob extends BaseJob {
+    kind = "HTML";
+    lowestPrice?: number;
+};
+
+export class JsonJob extends BaseJob {
+    kind = "JSON";
+    alertUrl?: string;
+}
+
+export type JobDTO = {
+    kind: "HTML" | "JSON";
+    id: number;
+    name: string;
+    active: boolean;
+    url: string;
+    selector: string;
+    error: string | null;
+    lowestPrice?: number;
+    alertUrl?: string;
+};
+
+export type WatchList = Array<HtmlJob | JsonJob>;

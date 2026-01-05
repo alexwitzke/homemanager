@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import express from "express";
 import cors from "cors";
-import { type Settings, type BotSettings, WatchItem } from "./types.js";
+import { type Settings, type BotSettings, type WatchList, JsonJob, HtmlJob, type JobDTO } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
 import * as path from 'path';
@@ -21,6 +21,13 @@ const browser = await firefox.launch({
     // args: [
     //     '--disable-http2'
     // ]
+});
+
+const context = await browser.newContext({
+    locale: 'de-DE',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    timezoneId: 'Europe/Berlin',
+    viewport: { width: 1366, height: 768 }
 });
 
 const settingsPath = path.join(APP_ROOT, "config", "settings.json");
@@ -41,51 +48,51 @@ const msg_id = botSettings.botMessageId;
 
 const bot = new TelegramBot(token, { polling: true });
 
-app.get('/api/job/:id', (req, res) => {
-    let watchListRaw = readFileSync(watchlistPath, "utf-8");
-    let watchList: WatchItem[] = JSON.parse(watchListRaw);
+// app.get('/api/job/:id', (req, res) => {
+//     let watchListRaw = readFileSync(watchlistPath, "utf-8");
+//     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
-    res.json(watchList.find(j => j.id === eval(req.params.id)));
-});
+//     res.json(watchList.find(j => j.id === eval(req.params.id)));
+// });
 
-app.post("/api/job/", function (req, res) {
-    let watchListRaw = readFileSync(watchlistPath, "utf-8");
-    let watchList: WatchItem[] = JSON.parse(watchListRaw);
+// app.post("/api/job/", function (req, res) {
+//     let watchListRaw = readFileSync(watchlistPath, "utf-8");
+//     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
-    var job = watchList.find(j => j.id === eval(req.body.id));
-    var _new = false;
+//     var job = watchList.find(j => j.id === eval(req.body.id));
+//     var _new = false;
 
-    if (job == null) {
-        _new = true;
-        job = new WatchItem();
-        //var lastIndex = jobs.length == 0 ? -1 : Math.max.apply(Math, jobs.map(function (j) { return j.id; }));
-        job.id = watchList.length + 1;
-        job.lowestPrice = req.body.lowestPrice;
-        watchList.push(job);
-    } else {
-        job.id = eval(req.body.id);
-    }
+//     if (job == null) {
+//         _new = true;
+//         job = new WatchItem();
+//         //var lastIndex = jobs.length == 0 ? -1 : Math.max.apply(Math, jobs.map(function (j) { return j.id; }));
+//         job.id = watchList.length + 1;
+//         job.lowestPrice = req.body.lowestPrice;
+//         watchList.push(job);
+//     } else {
+//         job.id = eval(req.body.id);
+//     }
 
-    job.name = req.body.name;
-    job.url = req.body.url;
-    job.selector = req.body.selector;
-    job.active = req.body.active;
-    //job.priceParsing = req.body.priceParsing;
+//     job.name = req.body.name;
+//     job.url = req.body.url;
+//     job.selector = req.body.selector;
+//     job.active = req.body.active;
+//     //job.priceParsing = req.body.priceParsing;
 
-    if (_new) {
-        watchList.push(job);
-    }
+//     if (_new) {
+//         watchList.push(job);
+//     }
 
-    writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
-    res.sendStatus(200);
-});
+//     writeFile(watchlistPath, JSON.stringify(watchList, null, 4), 'utf8');
+//     res.sendStatus(200);
+// });
 
-app.get('/api/jobs', (req, res) => {
-    let watchListRaw = readFileSync(watchlistPath, "utf-8");
-    let watchList: WatchItem[] = JSON.parse(watchListRaw);
+// app.get('/api/jobs', (req, res) => {
+//     let watchListRaw = readFileSync(watchlistPath, "utf-8");
+//     let watchList: WatchItem[] = JSON.parse(watchListRaw);
 
-    res.json(watchList);
-});
+//     res.json(watchList);
+// });
 
 function startWatcher() {
     start();
@@ -96,9 +103,27 @@ function startWatcher() {
     bot.sendMessage(msg_id, `Starting price watcher server...`);
 }
 
+function createJob(dto: JobDTO): HtmlJob | JsonJob {
+    switch (dto.kind) {
+        case "HTML": {
+            const job = new HtmlJob();
+            Object.assign(job, dto);
+            return job;
+        }
+        case "JSON": {
+            const job = new JsonJob();
+            Object.assign(job, dto);
+            return job;
+        }
+        default:
+            throw new Error(`Unbekannter Job-Typ: ${(dto as any).kind}`);
+    }
+}
+
 async function start() {
-    let watchListRaw = await readFile(watchlistPath, "utf-8");
-    let watchList: WatchItem[] = JSON.parse(watchListRaw);
+    const watchListRaw = await readFile(watchlistPath, "utf-8");
+    const raw = JSON.parse(watchListRaw) as JobDTO[];
+    let watchList: WatchList = raw.map(createJob);
 
     console.log("-----");
     console.log("Start run at:\t", new Date().toLocaleString('de', { timeZone: 'Europe/Berlin', timeZoneName: 'short' }));
@@ -110,16 +135,9 @@ async function start() {
         }
 
         try {
-            if (item.kind === "JSON") {
+            if (item instanceof JsonJob) {
                 console.log("Start JSON job for item:", item.name);
                 console.log("Parsing url:\t", item.url);
-
-                const context = await browser.newContext({
-                    locale: 'de-DE',
-                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    timezoneId: 'Europe/Berlin',
-                    viewport: { width: 1366, height: 768 }
-                });
 
                 const page = await context.newPage();
 
@@ -146,27 +164,40 @@ async function start() {
                 }
 
                 //console.log("JSON Data:", result[0]);
-            } else if (item.kind === "HTML") {
+            } else if (item instanceof HtmlJob) {
                 console.log("Start HTML job for item:", item.name);
 
-                const response = await fetch(item.url, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 ...',
-                        'Accept': 'application/json',
-                        'Accept-Language': 'de-DE,de;q=0.9',
-                        'Referer': 'https://www.google.de/',
-                    }
+                // const response = await fetch(item.url, {
+                //     headers: {
+                //         'User-Agent': 'Mozilla/5.0 ...',
+                //         'Accept': 'application/json',
+                //         'Accept-Language': 'de-DE,de;q=0.9',
+                //         'Referer': 'https://www.google.de/',
+                //     }
+                // });
+
+                // if (!response.ok) {
+                //     const error = new Error(`HTTP Error: ${response.status}`);
+                //     item.error = error.message;
+                //     throw error;
+                // }
+
+                // const html = await response.text();
+
+                const page = await context.newPage();
+
+                await page.goto(item.url, {
+                    waitUntil: 'networkidle'
                 });
 
-                if (!response.ok) {
-                    const error = new Error(`HTTP Error: ${response.status}`);
-                    item.error = error.message;
-                    throw error;
-                }
+                const data = await page.evaluate(async (url) => {
+                    const res = await fetch(url, {
+                        credentials: 'include'
+                    });
+                    return res.text();
+                }, item.url);
 
-                const html = await response.text();
-
-                const dom = new JSDOM(html);
+                const dom = new JSDOM(data);
                 const document = dom.window.document;
 
                 const rawPrice = document.querySelector(item.selector);
