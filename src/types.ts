@@ -49,6 +49,7 @@ export abstract class BaseJob {
 
 export class HtmlJob extends BaseJob {
     kind = "HTML";
+    acceptButtonSelector?: string;
     lowestPrice?: number;
 };
 

@@ -1,72 +1,53 @@
 [
     {
-        "kind": "JSON",
         "id": 100,
         "name": "AIDA",
-        "active": true,
-        "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
-        "alertUrl": "https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0",
+        "active": false,
+        "error": null,
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
-        "error": null
+        "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
+        "kind": "JSON",
+        "alertUrl": "https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0"
     },
     {
-        "kind": "HTML",
         "id": 0,
         "name": "Bambu Lab H2C Laser",
-        "active": true,
-        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767498",
+        "active": false,
+        "error": null,
         "selector": ".bbl-grey-13.bbl-title-3.font-bold",
-        "lowestPrice": 2799,
-        "error": null
+        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767498",
+        "kind": "HTML",
+        "lowestPrice": 2799
     },
     {
-        "kind": "HTML",
         "id": 1,
         "name": "Bambu Lab H2C",
-        "active": true,
-        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
+        "active": false,
+        "error": null,
         "selector": ".bbl-grey-13.bbl-title-3.font-bold",
-        "lowestPrice": 2249,
-        "error": null
+        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
+        "kind": "HTML",
+        "lowestPrice": 2249
     },
     {
-        "kind": "HTML",
         "id": 2,
-        "name": "Amazon Spindel 500W",
+        "name": "Bambu Lab H2C Ultimate",
         "active": true,
-        "url": "https://www.amazon.de/gp/product/B09DD132RT?smid=A2KIR130CICOJZ&psc=1",
-        "selector": ".aok-offscreen",
-        "lowestPrice": 96.69,
-        "error": "Cannot access 'match' before initialization"
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set\", waiting until \"networkidle\"\u001b[22m\n",
+        "selector": ".price.h1",
+        "url": "https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set",
+        "kind": "HTML",
+        "acceptButtonSelector": "#consent-banner-btn-all",
+        "lowestPrice": 2699
     },
     {
-        "kind": "HTML",
         "id": 3,
         "name": "Idealo Lenovo Monitor",
-        "active": true,
+        "active": false,
+        "error": "fetch failed",
+        "selector": ".oopStage-conditionButton-wrapper-text-price",
         "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
-        "selector": ".oopStage-conditionButton-wrapper-text-price",
-        "lowestPrice": 279,
-        "error": null
-    },
-    {
         "kind": "HTML",
-        "id": 4,
-        "name": "Idealo Lenovo PC1 für Leo",
-        "active": true,
-        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/208052601_-loq-tower-gen-10-26adr10-91df002lgf-lenovo.html",
-        "selector": ".oopStage-conditionButton-wrapper-text-price",
-        "lowestPrice": 0,
-        "error": "Kein Preis angegeben"
-    },
-    {
-        "kind": "HTML",
-        "id": 4,
-        "name": "Idealo Lenovo PC2 für Leo",
-        "active": true,
-        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/208668768_-loq-tower-gen-10-26adr10-91df0012gf-lenovo.html",
-        "selector": ".oopStage-conditionButton-wrapper-text-price",
-        "lowestPrice": 0,
-        "error": "Kein Preis angegeben"
+        "lowestPrice": 279
     }
 ]

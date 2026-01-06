@@ -167,33 +167,19 @@ async function start() {
             } else if (item instanceof HtmlJob) {
                 console.log("Start HTML job for item:", item.name);
 
-                // const response = await fetch(item.url, {
-                //     headers: {
-                //         'User-Agent': 'Mozilla/5.0 ...',
-                //         'Accept': 'application/json',
-                //         'Accept-Language': 'de-DE,de;q=0.9',
-                //         'Referer': 'https://www.google.de/',
-                //     }
-                // });
-
-                // if (!response.ok) {
-                //     const error = new Error(`HTTP Error: ${response.status}`);
-                //     item.error = error.message;
-                //     throw error;
-                // }
-
-                // const html = await response.text();
-
                 const page = await context.newPage();
 
                 await page.goto(item.url, {
                     waitUntil: 'networkidle'
                 });
 
+                if (item.acceptButtonSelector) {
+                    await page.waitForSelector(item.acceptButtonSelector, { timeout: 5000 });
+                    await page.click(item.acceptButtonSelector);
+                }
+
                 const data = await page.evaluate(async (url) => {
-                    const res = await fetch(url, {
-                        credentials: 'include'
-                    });
+                    const res = await fetch(url, { credentials: 'include' });
                     return res.text();
                 }, item.url);
 
@@ -203,7 +189,7 @@ async function start() {
                 const rawPrice = document.querySelector(item.selector);
 
                 try {
-                    const parsedPrice = parsePrice(rawPrice?.textContent, settings);
+                    const parsedPrice = parsePrice(rawPrice?.textContent.trim(), settings);
 
                     console.log("Parsing url:\t", item.url);
                     console.log("Parsed price:\t", parsedPrice);
@@ -222,6 +208,8 @@ async function start() {
                     }
                 } catch (error) {
                     item.error = error.message;
+                    console.log("Fehler beim Parsen des Preises für:", item.name);
+                    console.log("Fehlerdetails:", error.message);
                     bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
                 }
             }
