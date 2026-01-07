@@ -1,8 +1,8 @@
 [
     {
-        "id": 100,
+        "id": 0,
         "name": "AIDA",
-        "active": false,
+        "active": true,
         "error": null,
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
         "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
@@ -10,19 +10,9 @@
         "alertUrl": "https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0"
     },
     {
-        "id": 0,
-        "name": "Bambu Lab H2C Laser",
-        "active": false,
-        "error": null,
-        "selector": ".bbl-grey-13.bbl-title-3.font-bold",
-        "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767498",
-        "kind": "HTML",
-        "lowestPrice": 2799
-    },
-    {
         "id": 1,
         "name": "Bambu Lab H2C",
-        "active": false,
+        "active": true,
         "error": null,
         "selector": ".bbl-grey-13.bbl-title-3.font-bold",
         "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
@@ -30,7 +20,17 @@
         "lowestPrice": 2249
     },
     {
-        "id": 2,
+        "id": 3,
+        "name": "Idealo Lenovo Monitor",
+        "active": true,
+        "error": "fetch failed",
+        "selector": ".oopStage-conditionButton-wrapper-text-price",
+        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
+        "kind": "HTML",
+        "lowestPrice": 279
+    },
+    {
+        "id": 4,
         "name": "Bambu Lab H2C Ultimate",
         "active": true,
         "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set\", waiting until \"networkidle\"\u001b[22m\n",
@@ -39,15 +39,5 @@
         "kind": "HTML",
         "acceptButtonSelector": "#consent-banner-btn-all",
         "lowestPrice": 2699
-    },
-    {
-        "id": 3,
-        "name": "Idealo Lenovo Monitor",
-        "active": false,
-        "error": "fetch failed",
-        "selector": ".oopStage-conditionButton-wrapper-text-price",
-        "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
-        "kind": "HTML",
-        "lowestPrice": 279
     }
 ]

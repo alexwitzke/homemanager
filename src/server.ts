@@ -174,8 +174,12 @@ async function start() {
                 });
 
                 if (item.acceptButtonSelector) {
-                    await page.waitForSelector(item.acceptButtonSelector, { timeout: 5000 });
-                    await page.click(item.acceptButtonSelector);
+                    try {
+                        await page.waitForSelector(item.acceptButtonSelector, { timeout: 5000, state: 'visible' });
+                        await page.click(item.acceptButtonSelector);
+                    } catch (e) {
+                        console.warn('Accept-Button nicht gefunden oder nicht klickbar');
+                    }
                 }
 
                 const data = await page.evaluate(async (url) => {
