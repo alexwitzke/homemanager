@@ -101,8 +101,9 @@ function startWatcher() {
         start();
     }, settings.intervallInMinutes * 60 * 1000);
 
-    if (useTelegramBot)
+    if (useTelegramBot) {
         bot.sendMessage(process.env.BOTMESSAGEID, `Starting price watcher server...`);
+    }
 }
 
 function createJob(dto: JobDTO): HtmlJob | JsonJob {
