@@ -13,7 +13,12 @@ import dotenv from 'dotenv'
 
 export const APP_ROOT = process.cwd();
 
-dotenv.config({ path: path.join(APP_ROOT, '.env') });
+if (APP_ROOT.endsWith('_watcher')) {
+    dotenv.config({ path: path.join(APP_ROOT, '.env') });
+} else {
+    dotenv.config({ path: path.join(APP_ROOT, 'config', '.env') });
+}
+
 
 const app = express();
 app.use(cors());
