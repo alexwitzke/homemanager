@@ -102,7 +102,7 @@ function startWatcher() {
     }, settings.intervallInMinutes * 60 * 1000);
 
     if (useTelegramBot)
-        bot.sendMessage(msg_id, `Starting price watcher server...`);
+        bot.sendMessage(process.env.BOTMESSAGEID, `Starting price watcher server...`);
 }
 
 function createJob(dto: JobDTO): HtmlJob | JsonJob {
