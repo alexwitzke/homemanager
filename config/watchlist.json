@@ -3,9 +3,10 @@
         "id": 0,
         "name": "AIDA",
         "active": true,
-        "error": null,
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0\", waiting until \"networkidle\"\n",
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
         "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
+        "acceptButtonSelector": ".sc-gsFSXq.bQcbQg",
         "kind": "JSON",
         "alertUrl": "https://aida.de/finden/PR07260329/PREMIUM?pax[adults]=2&pax[juveniles]=0&pax[children]=1&pax[babies]=0"
     },
@@ -13,9 +14,10 @@
         "id": 1,
         "name": "Bambu Lab H2C",
         "active": true,
-        "error": null,
+        "error": "page.evaluate: Execution context was destroyed, most likely because of a navigation.",
         "selector": ".bbl-grey-13.bbl-title-3.font-bold",
         "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
+        "acceptButtonSelector": "#truste-consent-button",
         "kind": "HTML",
         "lowestPrice": 2249
     },
@@ -23,9 +25,10 @@
         "id": 3,
         "name": "Idealo Lenovo Monitor",
         "active": true,
-        "error": "fetch failed",
+        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html\", waiting until \"networkidle\"\n",
         "selector": ".oopStage-conditionButton-wrapper-text-price",
         "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
+        "acceptButtonSelector": "#accept",
         "kind": "HTML",
         "lowestPrice": 279
     },
@@ -36,8 +39,8 @@
         "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set\", waiting until \"networkidle\"\u001b[22m\n",
         "selector": ".price.h1",
         "url": "https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set",
-        "kind": "HTML",
         "acceptButtonSelector": "#consent-banner-btn-all",
+        "kind": "HTML",
         "lowestPrice": 2699
     }
 ]

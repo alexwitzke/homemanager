@@ -25,6 +25,7 @@ export class WatchItem {
     selector: string;
     lowestPrice?: number;
     error: string | null;
+    acceptButtonSelector?: string;
 };
 
 export type Settings = {
@@ -45,11 +46,11 @@ export abstract class BaseJob {
     error: string | null;
     selector: string;
     url: string;
+    acceptButtonSelector?: string;
 };
 
 export class HtmlJob extends BaseJob {
     kind = "HTML";
-    acceptButtonSelector?: string;
     lowestPrice?: number;
 };
 
@@ -68,6 +69,7 @@ export type JobDTO = {
     error: string | null;
     lowestPrice?: number;
     alertUrl?: string;
+    acceptButtonSelector?: string;
 };
 
 export type WatchList = Array<HtmlJob | JsonJob>;

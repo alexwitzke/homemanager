@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 const browser = await firefox.launch({
-    headless: true,   // false zum Debuggen
+    headless: false,   // false zum Debuggen
     // args: [
     //     '--disable-http2'
     // ]
@@ -145,6 +145,15 @@ async function start() {
                     waitUntil: 'networkidle'
                 });
 
+                if (item.acceptButtonSelector) {
+                    try {
+                        await page.waitForSelector(item.acceptButtonSelector, { timeout: 5000, state: 'visible' });
+                        await page.click(item.acceptButtonSelector);
+                    } catch (e) {
+                        console.warn('Accept-Button nicht gefunden oder nicht klickbar');
+                    }
+                }
+
                 const data = await page.evaluate(async (url) => {
                     const res = await fetch(url, {
                         credentials: 'include'
@@ -177,6 +186,10 @@ async function start() {
                     try {
                         await page.waitForSelector(item.acceptButtonSelector, { timeout: 5000, state: 'visible' });
                         await page.click(item.acceptButtonSelector);
+
+                        await page.goto(item.url, {
+                            waitUntil: 'networkidle'
+                        });
                     } catch (e) {
                         console.warn('Accept-Button nicht gefunden oder nicht klickbar');
                     }
