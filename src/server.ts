@@ -9,8 +9,11 @@ import TelegramBot from "node-telegram-bot-api";
 import * as path from 'path';
 import { JSONPath } from 'jsonpath-plus';
 import { firefox } from 'playwright';
+import dotenv from 'dotenv'
 
 export const APP_ROOT = process.cwd();
+
+dotenv.config({ path: path.join(APP_ROOT, '.env') });
 
 const app = express();
 app.use(cors());
@@ -32,7 +35,7 @@ const context = await browser.newContext({
 
 const settingsPath = path.join(APP_ROOT, "config", "settings.json");
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
-const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
+//const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
 
 let watcherTask: NodeJS.Timeout | null = null;
 
@@ -40,11 +43,11 @@ let watcherTask: NodeJS.Timeout | null = null;
 const settingsRaw = await readFile(settingsPath, "utf-8");
 const settings: Settings = JSON.parse(settingsRaw);
 
-const botSettingsRaw = await readFile(botConfigPath, "utf-8");
-const botSettings: BotSettings = JSON.parse(botSettingsRaw);
+//const botSettingsRaw = await readFile(botConfigPath, "utf-8");
+//const botSettings: BotSettings = JSON.parse(botSettingsRaw);
 
-const token = botSettings.token;
-const msg_id = botSettings.botMessageId;
+const token = process.env.TOKEN;
+const msg_id = process.env.BOTMESSAGEID;
 
 const bot = new TelegramBot(token, { polling: true });
 
