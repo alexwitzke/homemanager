@@ -1,9 +1,8 @@
 import { JSDOM } from "jsdom";
-import { readFileSync } from "fs";
 import { readFile, writeFile } from "fs/promises";
 import express from "express";
 import cors from "cors";
-import { type Settings, type BotSettings, type WatchList, JsonJob, HtmlJob, type JobDTO } from "./types.js";
+import { type Settings, type WatchList, JsonJob, HtmlJob, type JobDTO } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
 import * as path from 'path';
@@ -41,21 +40,13 @@ const context = await browser.newContext({
 
 const settingsPath = path.join(APP_ROOT, "config", "settings.json");
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
-//const botConfigPath = path.join(APP_ROOT, "config", "bot.json");
 
 let watcherTask: NodeJS.Timeout | null = null;
 
 // JSONs einlesen
 const settingsRaw = await readFile(settingsPath, "utf-8");
 const settings: Settings = JSON.parse(settingsRaw);
-
-//const botSettingsRaw = await readFile(botConfigPath, "utf-8");
-//const botSettings: BotSettings = JSON.parse(botSettingsRaw);
-
-const token = process.env.TOKEN;
-const msg_id = process.env.BOTMESSAGEID;
-
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(process.env.TOKEN, { polling: true });
 
 // app.get('/api/job/:id', (req, res) => {
 //     let watchListRaw = readFileSync(watchlistPath, "utf-8");
@@ -181,7 +172,7 @@ async function start() {
                 if (result[0].length > 0) {
                     console.log("Job alert\t", item.alertUrl);
                     if (useTelegramBot) {
-                        bot.sendMessage(msg_id, `Job alert!\n${item.alertUrl}`);
+                        bot.sendMessage(process.env.BOTMESSAGEID, `Job alert!\n${item.alertUrl}`);
                     }
                 }
 
@@ -234,7 +225,7 @@ async function start() {
                         console.log("Neuer Tiefstpreis gefunden!");
                         console.log("Lowest price stored:", item.lowestPrice);
                         if (useTelegramBot) {
-                            bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                            bot.sendMessage(process.env.BOTMESSAGEID, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
                         }
                     }
                 } catch (error) {
@@ -242,7 +233,7 @@ async function start() {
                     console.log("Fehler beim Parsen des Preises für:", item.name);
                     console.log("Fehlerdetails:", error.message);
                     if (useTelegramBot) {
-                        bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
+                        bot.sendMessage(process.env.BOTMESSAGEID, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
                     }
                 }
             }
