@@ -17,7 +17,7 @@ app.use(cors());
 app.use(express.json());
 
 const browser = await firefox.launch({
-    headless: false,   // false zum Debuggen
+    headless: true,   // false zum Debuggen
     // args: [
     //     '--disable-http2'
     // ]
