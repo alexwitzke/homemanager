@@ -13,22 +13,23 @@ import dotenv from 'dotenv'
 
 export const APP_ROOT = process.cwd();
 
+var headless = true;
+var useTelegramBot = true;
+
 if (APP_ROOT.endsWith('_watcher')) {
+    headless = false;
+    useTelegramBot = false;
     dotenv.config({ path: path.join(APP_ROOT, '.env') });
 } else {
     dotenv.config({ path: path.join(APP_ROOT, 'config', '.env') });
 }
-
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const browser = await firefox.launch({
-    headless: true,   // false zum Debuggen
-    // args: [
-    //     '--disable-http2'
-    // ]
+    headless: headless
 });
 
 const context = await browser.newContext({
@@ -108,7 +109,9 @@ function startWatcher() {
         console.log("Watcher läuft... Preise prüfen");
         start();
     }, settings.intervallInMinutes * 60 * 1000);
-    bot.sendMessage(msg_id, `Starting price watcher server...`);
+
+    if (useTelegramBot)
+        bot.sendMessage(msg_id, `Starting price watcher server...`);
 }
 
 function createJob(dto: JobDTO): HtmlJob | JsonJob {
@@ -177,7 +180,9 @@ async function start() {
 
                 if (result[0].length > 0) {
                     console.log("Job alert\t", item.alertUrl);
-                    bot.sendMessage(msg_id, `Job alert!\n${item.alertUrl}`);
+                    if (useTelegramBot) {
+                        bot.sendMessage(msg_id, `Job alert!\n${item.alertUrl}`);
+                    }
                 }
 
                 //console.log("JSON Data:", result[0]);
@@ -228,14 +233,17 @@ async function start() {
 
                         console.log("Neuer Tiefstpreis gefunden!");
                         console.log("Lowest price stored:", item.lowestPrice);
-
-                        bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                        if (useTelegramBot) {
+                            bot.sendMessage(msg_id, `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`);
+                        }
                     }
                 } catch (error) {
                     item.error = error.message;
                     console.log("Fehler beim Parsen des Preises für:", item.name);
                     console.log("Fehlerdetails:", error.message);
-                    bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
+                    if (useTelegramBot) {
+                        bot.sendMessage(msg_id, `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`);
+                    }
                 }
             }
         } catch (error) {
