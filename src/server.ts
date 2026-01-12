@@ -1,4 +1,4 @@
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import { readFile, writeFile } from "fs/promises";
 import express from "express";
 import cors from "cors";
@@ -163,7 +163,16 @@ async function start() {
                     () => document.documentElement.outerHTML
                 );
 
-                const dom = new JSDOM(html);
+                const virtualConsole = new VirtualConsole();
+                virtualConsole.on("error", () => {
+                    // CSS parsing errors unterdrücken
+                });
+
+                const dom = new JSDOM(html, {
+                    virtualConsole,
+                    pretendToBeVisual: false
+                });
+                
                 try {
                     const document = dom.window.document;
                     const rawPrice = document.querySelector(item.selector);
