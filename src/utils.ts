@@ -20,7 +20,7 @@ function parsePrice(raw: string, settings: Settings): number {
 
             if (!match) continue;
 
-            console.log(`Preis-Match gefunden mit Pattern: ${pattern.name} für rohen Preis: "${raw}"`);
+            console.log(`Preis-Match gefunden mit Pattern: "${pattern.name}" für rohen Preis: "${raw}"`);
 
             const normalized = applyRegexRules(match[0], parser.rules);
             const value = Number(normalized);

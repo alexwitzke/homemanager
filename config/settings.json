@@ -1,31 +1,6 @@
 {
     "intervallInMinutes": 30,
-    "priceParser": [
-        {
-            "pattern": [
-                {
-                    "name": "BambuLab DE Format: € 1.234,56 EUR",
-                    "matchPattern": "€\\s?([\\d.]+,\\d{2})\\sEUR"
-                }
-            ],
-            "rules": [
-                {
-                    "pattern": "[^\\d.,-]",
-                    "flags": "g",
-                    "replaceWith": ""
-                },
-                {
-                    "pattern": "\\.",
-                    "flags": "g",
-                    "replaceWith": ""
-                },
-                {
-                    "pattern": ",",
-                    "flags": "",
-                    "replaceWith": "."
-                }
-            ]
-        },
+    "priceParser": [        
         {
             "pattern": [ 
                 {
