@@ -57,6 +57,7 @@ export class HtmlJob extends BaseJob {
 export class JsonJob extends BaseJob {
     kind = "JSON";
     alertUrl?: string;
+    evalCondition: string;
 }
 
 export type JobDTO = {

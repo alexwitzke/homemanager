@@ -127,7 +127,8 @@ async function start() {
                     json: data,
                 });
 
-                if (result?.[0]?.length > 0) {
+                if (eval(item.evalCondition)) {
+                    console.log("Condition erfüllt!");
                     console.log("Job alert\t", item.alertUrl);
                     if (useTelegramBot) {
                         bot.sendMessage(
@@ -172,7 +173,7 @@ async function start() {
                     virtualConsole,
                     pretendToBeVisual: false
                 });
-                
+
                 try {
                     const document = dom.window.document;
                     const rawPrice = document.querySelector(item.selector);
