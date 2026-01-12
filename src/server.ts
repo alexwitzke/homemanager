@@ -47,7 +47,7 @@ let running = false;
 let runCount = 0;
 
 async function recreateContext() {
-    console.log("Recreating browser context");
+    console.log("Recreate browser context");
     await context.close();
     context = await browser.newContext({
         locale: "de-DE",
@@ -71,18 +71,25 @@ function createJob(dto: JobDTO): HtmlJob | JsonJob {
 
 function logMemory() {
     const rss = Math.round(process.memoryUsage().rss / 1024 / 1024);
-    console.log(`Memory RSS: ${rss} MB`);
+    console.log("Memory RSS:", rss, "MB");
 }
 
 async function start() {
     runCount++;
     if (runCount % 20 === 0) await recreateContext();
 
-    const raw = JSON.parse(await readFile(watchlistPath, "utf-8")) as JobDTO[];
+    const watchListRaw = await readFile(watchlistPath, "utf-8");
+    const raw = JSON.parse(watchListRaw) as JobDTO[];
     const watchList: WatchList = raw.map(createJob);
 
     console.log("-----");
-    console.log("Start run:", new Date().toLocaleString("de-DE"));
+    console.log(
+        "Start run at:\t",
+        new Date().toLocaleString("de", {
+            timeZone: "Europe/Berlin",
+            timeZoneName: "short",
+        })
+    );
     console.log("-----");
 
     for (const item of watchList) {
@@ -91,15 +98,23 @@ async function start() {
         let page = null;
 
         try {
-            page = await context.newPage();
-
             if (item instanceof JsonJob) {
+                console.log("Start JSON job for item:", item.name);
+                console.log("Parsing url:\t", item.url);
+
+                page = await context.newPage();
                 await page.goto(item.alertUrl, { waitUntil: "domcontentloaded" });
 
                 if (item.acceptButtonSelector) {
                     try {
-                        await page.click(item.acceptButtonSelector, { timeout: 5000 });
-                    } catch {}
+                        await page.waitForSelector(item.acceptButtonSelector, {
+                            timeout: 5000,
+                            state: "visible",
+                        });
+                        await page.click(item.acceptButtonSelector);
+                    } catch {
+                        console.warn("Accept-Button nicht gefunden oder nicht klickbar");
+                    }
                 }
 
                 const data = await page.evaluate(async (url) => {
@@ -107,49 +122,102 @@ async function start() {
                     return res.json();
                 }, item.url);
 
-                const result = JSONPath({ path: item.selector, json: data });
+                const result = JSONPath({
+                    path: item.selector,
+                    json: data,
+                });
 
-                if (result?.[0]?.length && useTelegramBot) {
-                    bot.sendMessage(process.env.BOTMESSAGEID!, `Job alert!\n${item.alertUrl}`);
+                if (result?.[0]?.length > 0) {
+                    console.log("Job alert\t", item.alertUrl);
+                    if (useTelegramBot) {
+                        bot.sendMessage(
+                            process.env.BOTMESSAGEID!,
+                            `Job alert!\n${item.alertUrl}`
+                        );
+                    }
                 }
             }
 
             if (item instanceof HtmlJob) {
+                console.log("Start HTML job for item:", item.name);
+
+                page = await context.newPage();
                 await page.goto(item.url, { waitUntil: "domcontentloaded" });
 
                 if (item.acceptButtonSelector) {
                     try {
-                        await page.click(item.acceptButtonSelector, { timeout: 5000 });
-                        await page.goto(item.url, { waitUntil: "domcontentloaded" });
-                    } catch {}
+                        await page.waitForSelector(item.acceptButtonSelector, {
+                            timeout: 5000,
+                            state: "visible",
+                        });
+                        await page.click(item.acceptButtonSelector);
+                        await page.goto(item.url, {
+                            waitUntil: "domcontentloaded",
+                        });
+                    } catch {
+                        console.warn("Accept-Button nicht gefunden oder nicht klickbar");
+                    }
                 }
 
-                const html = await page.evaluate(() => document.documentElement.outerHTML);
-                const dom = new JSDOM(html);
+                const html = await page.evaluate(
+                    () => document.documentElement.outerHTML
+                );
 
+                const dom = new JSDOM(html);
                 try {
                     const document = dom.window.document;
                     const rawPrice = document.querySelector(item.selector);
-                    const parsedPrice = parsePrice(rawPrice?.textContent?.trim(), settings);
 
-                    if (item.lowestPrice === 0) item.lowestPrice = Number.MAX_SAFE_INTEGER;
+                    const parsedPrice = parsePrice(
+                        rawPrice?.textContent?.trim(),
+                        settings
+                    );
+
+                    console.log("Parsing url:\t", item.url);
+                    console.log("Parsed price:\t", parsedPrice);
+
+                    if (item.lowestPrice === 0) {
+                        item.lowestPrice = 1_000_000;
+                    }
 
                     if (parsedPrice < item.lowestPrice) {
                         item.lowestPrice = parsedPrice;
+
+                        console.log("Neuer Tiefstpreis gefunden!");
+                        console.log(
+                            "Lowest price stored:",
+                            item.lowestPrice
+                        );
+
                         if (useTelegramBot) {
                             bot.sendMessage(
                                 process.env.BOTMESSAGEID!,
-                                `Neuer Tiefstpreis für ${item.name}: ${parsedPrice} EUR\n${item.url}`
+                                `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`
                             );
                         }
+                    }
+                } catch (error: any) {
+                    item.error = error.message;
+                    console.log(
+                        "Fehler beim Parsen des Preises für:",
+                        item.name
+                    );
+                    console.log("Fehlerdetails:", error.message);
+
+                    if (useTelegramBot) {
+                        bot.sendMessage(
+                            process.env.BOTMESSAGEID!,
+                            `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`
+                        );
                     }
                 } finally {
                     dom.window.close();
                 }
             }
-        } catch (err: any) {
-            item.error = err?.message ?? String(err);
-            console.error("Job error:", item.name, item.error);
+        } catch (error: any) {
+            item.error = error.message;
+            console.log("Fehler beim Abrufen der URL:", item.url);
+            console.log("Fehlerdetails:", error.message);
         } finally {
             if (page) await page.close();
             logMemory();
@@ -157,12 +225,19 @@ async function start() {
         }
     }
 
-    await writeFile(watchlistPath, JSON.stringify(watchList, null, 4), "utf-8");
+    await writeFile(
+        watchlistPath,
+        JSON.stringify(watchList, null, 4),
+        "utf-8"
+    );
 }
 
 async function loop() {
     if (useTelegramBot) {
-        bot.sendMessage(process.env.BOTMESSAGEID!, "Starting price watcher server...");
+        bot.sendMessage(
+            process.env.BOTMESSAGEID!,
+            "Starting price watcher server..."
+        );
     }
 
     while (true) {

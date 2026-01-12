@@ -19,13 +19,13 @@
         "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
         "acceptButtonSelector": "#truste-consent-button",
         "kind": "HTML",
-        "lowestPrice": 2249
+        "lowestPrice": 2.24
     },
     {
         "id": 3,
         "name": "Idealo Lenovo Monitor",
         "active": true,
-        "error": "page.goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to \"https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html\", waiting until \"networkidle\"\n",
+        "error": "page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html\", waiting until \"domcontentloaded\"\u001b[22m\n",
         "selector": ".oopStage-conditionButton-wrapper-text-price",
         "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
         "acceptButtonSelector": "#accept",
