@@ -4,7 +4,7 @@ container="homemanager"
 
 echo Stopping container
 docker stop $container
-docker rm homemanager
+docker rm $container
 
 echo Cloning repository 
 git clone https://github.com/alexwitzke/homemanager.git
