@@ -76,7 +76,8 @@ function logMemory() {
 
 async function start() {
     runCount++;
-    if (runCount % 20 === 0) await recreateContext();
+    //if (runCount % 20 === 0) await recreateContext();
+    await recreateContext();
 
     const watchListRaw = await readFile(watchlistPath, "utf-8");
     const raw = JSON.parse(watchListRaw) as JobDTO[];
