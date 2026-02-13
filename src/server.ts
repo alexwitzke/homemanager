@@ -1,13 +1,12 @@
 import { JSDOM, VirtualConsole } from "jsdom";
 import { readFile, writeFile } from "fs/promises";
-import express from "express";
-import cors from "cors";
+import cors from "cors"; // falls du es später brauchst, sonst kannst du es löschen
 import { type Settings, type WatchList, JsonJob, HtmlJob, type JobDTO } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
 import * as path from "path";
 import { JSONPath } from "jsonpath-plus";
-import { firefox, type BrowserContext } from "playwright";
+import { firefox, type Browser, type BrowserContext, type Page } from "playwright";
 import dotenv from "dotenv";
 
 export const APP_ROOT = process.cwd();
@@ -23,32 +22,35 @@ if (APP_ROOT.endsWith("_watcher")) {
     dotenv.config({ path: path.join(APP_ROOT, "config", ".env") });
 }
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-const browser = await firefox.launch({ headless });
-
-let context: BrowserContext = await browser.newContext({
-    locale: "de-DE",
-    userAgent:
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    timezoneId: "Europe/Berlin",
-    viewport: { width: 1366, height: 768 },
-});
-
 const settingsPath = path.join(APP_ROOT, "config", "settings.json");
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
 
 const settings: Settings = JSON.parse(await readFile(settingsPath, "utf-8"));
-const bot = new TelegramBot(process.env.TOKEN!, { polling: true });
+const bot = useTelegramBot 
+    ? new TelegramBot(process.env.TOKEN!, { polling: false })
+    : null;
 
-let running = false;
+let browser: Browser;
+let context: BrowserContext;
+
 let runCount = 0;
 
-async function recreateContext() {
-    console.log("Recreate browser context");
-    await context.close();
+const virtualConsole = new VirtualConsole();
+virtualConsole.on("error", () => {
+    // CSS parsing errors unterdrücken
+});
+
+async function recreateBrowser() {
+    console.log("Recreating entire browser instance");
+    
+    if (context) {
+        await context.close().catch(() => {});
+    }
+    if (browser) {
+        await browser.close().catch(() => {});
+    }
+
+    browser = await firefox.launch({ headless });
     context = await browser.newContext({
         locale: "de-DE",
         userAgent:
@@ -57,6 +59,9 @@ async function recreateContext() {
         viewport: { width: 1366, height: 768 },
     });
 }
+
+// Browser beim Start initialisieren
+await recreateBrowser();
 
 function createJob(dto: JobDTO): HtmlJob | JsonJob {
     switch (dto.kind) {
@@ -71,13 +76,16 @@ function createJob(dto: JobDTO): HtmlJob | JsonJob {
 
 function logMemory() {
     const rss = Math.round(process.memoryUsage().rss / 1024 / 1024);
-    console.log("Memory RSS:", rss, "MB");
+    console.log(`Memory RSS: ${rss} MB`);
 }
 
 async function start() {
     runCount++;
-    //if (runCount % 20 === 0) await recreateContext();
-    await recreateContext();
+    
+    // Browser alle 15 Durchläufe komplett neu starten
+    if (runCount % 15 === 0) {
+        await recreateBrowser();
+    }
 
     const watchListRaw = await readFile(watchlistPath, "utf-8");
     const raw = JSON.parse(watchListRaw) as JobDTO[];
@@ -85,7 +93,7 @@ async function start() {
 
     console.log("-----");
     console.log(
-        "Start run at:\t",
+        "Start run #" + runCount + " at:\t",
         new Date().toLocaleString("de", {
             timeZone: "Europe/Berlin",
             timeZoneName: "short",
@@ -96,13 +104,11 @@ async function start() {
     for (const item of watchList) {
         if (!item.active) continue;
 
-        let page = null;
+        let page: Page | null = null;
 
         try {
             if (item instanceof JsonJob) {
-                console.log("Start JSON job for item:", item.name);
-                console.log("Parsing url:\t", item.url);
-
+                console.log("JSON job:", item.name);
                 page = await context.newPage();
                 await page.goto(item.alertUrl, { waitUntil: "domcontentloaded" });
 
@@ -114,11 +120,11 @@ async function start() {
                         });
                         await page.click(item.acceptButtonSelector);
                     } catch {
-                        console.warn("Accept-Button nicht gefunden oder nicht klickbar");
+                        // stiller Fail
                     }
                 }
 
-                const data = await page.evaluate(async (url) => {
+                const data = await page.evaluate(async (url: string) => {
                     const res = await fetch(url, { credentials: "include" });
                     return res.json();
                 }, item.url);
@@ -129,10 +135,9 @@ async function start() {
                 });
 
                 if (eval(item.evalCondition)) {
-                    console.log("Condition erfüllt!");
-                    console.log("Job alert\t", item.alertUrl);
-                    if (useTelegramBot) {
-                        bot.sendMessage(
+                    console.log("Condition erfüllt! →", item.alertUrl);
+                    if (useTelegramBot && bot) {
+                        await bot.sendMessage(
                             process.env.BOTMESSAGEID!,
                             `Job alert!\n${item.alertUrl}`
                         );
@@ -141,8 +146,7 @@ async function start() {
             }
 
             if (item instanceof HtmlJob) {
-                console.log("Start HTML job for item:", item.name);
-
+                console.log("HTML job:", item.name);
                 page = await context.newPage();
                 await page.goto(item.url, { waitUntil: "domcontentloaded" });
 
@@ -153,11 +157,9 @@ async function start() {
                             state: "visible",
                         });
                         await page.click(item.acceptButtonSelector);
-                        await page.goto(item.url, {
-                            waitUntil: "domcontentloaded",
-                        });
+                        await page.goto(item.url, { waitUntil: "domcontentloaded" });
                     } catch {
-                        console.warn("Accept-Button nicht gefunden oder nicht klickbar");
+                        // stiller Fail
                     }
                 }
 
@@ -165,14 +167,9 @@ async function start() {
                     () => document.documentElement.outerHTML
                 );
 
-                const virtualConsole = new VirtualConsole();
-                virtualConsole.on("error", () => {
-                    // CSS parsing errors unterdrücken
-                });
-
                 const dom = new JSDOM(html, {
                     virtualConsole,
-                    pretendToBeVisual: false
+                    pretendToBeVisual: false,
                 });
 
                 try {
@@ -184,8 +181,7 @@ async function start() {
                         settings
                     );
 
-                    console.log("Parsing url:\t", item.url);
-                    console.log("Parsed price:\t", parsedPrice);
+                    console.log("Parsed price:", parsedPrice);
 
                     if (item.lowestPrice === 0) {
                         item.lowestPrice = 1_000_000;
@@ -193,15 +189,10 @@ async function start() {
 
                     if (parsedPrice < item.lowestPrice) {
                         item.lowestPrice = parsedPrice;
+                        console.log("Neuer Tiefstpreis:", item.lowestPrice);
 
-                        console.log("Neuer Tiefstpreis gefunden!");
-                        console.log(
-                            "Lowest price stored:",
-                            item.lowestPrice
-                        );
-
-                        if (useTelegramBot) {
-                            bot.sendMessage(
+                        if (useTelegramBot && bot) {
+                            await bot.sendMessage(
                                 process.env.BOTMESSAGEID!,
                                 `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`
                             );
@@ -209,28 +200,29 @@ async function start() {
                     }
                 } catch (error: any) {
                     item.error = error.message;
-                    console.log(
-                        "Fehler beim Parsen des Preises für:",
-                        item.name
-                    );
-                    console.log("Fehlerdetails:", error.message);
+                    console.error(`Fehler bei ${item.name}:`, error.message);
 
-                    if (useTelegramBot) {
-                        bot.sendMessage(
+                    if (useTelegramBot && bot) {
+                        await bot.sendMessage(
                             process.env.BOTMESSAGEID!,
-                            `Fehler beim Parsen des Preises für ${item.name}: ${error.message}\n${item.url}`
+                            `Fehler beim Parsen für ${item.name}: ${error.message}\n${item.url}`
                         );
                     }
                 } finally {
-                    dom.window.close();
+                    if (dom) {
+                        dom.window.close();
+                        (dom as any) = null;
+                        (document as any) = null;
+                    }
                 }
             }
         } catch (error: any) {
             item.error = error.message;
-            console.log("Fehler beim Abrufen der URL:", item.url);
-            console.log("Fehlerdetails:", error.message);
+            console.error("Fehler beim Abrufen:", item.url, error.message);
         } finally {
-            if (page) await page.close();
+            if (page) {
+                await page.close().catch(() => {});
+            }
             logMemory();
             console.log("-----");
         }
@@ -241,26 +233,24 @@ async function start() {
         JSON.stringify(watchList, null, 4),
         "utf-8"
     );
+
+    // Abschluss-Info pro Run
+    console.log(`Run ${runCount} abgeschlossen. Memory: ${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`);
 }
 
 async function loop() {
-    if (useTelegramBot) {
-        bot.sendMessage(
+    if (useTelegramBot && bot) {
+        await bot.sendMessage(
             process.env.BOTMESSAGEID!,
-            "Starting price watcher server..."
+            "Price watcher gestartet..."
         );
     }
 
     while (true) {
-        if (!running) {
-            running = true;
-            try {
-                await start();
-            } catch (e) {
-                console.error("Watcher crashed:", e);
-            } finally {
-                running = false;
-            }
+        try {
+            await start();
+        } catch (e) {
+            console.error("Watcher crashed:", e);
         }
 
         await new Promise((r) =>
@@ -269,4 +259,4 @@ async function loop() {
     }
 }
 
-loop();
+loop().catch(console.error);
