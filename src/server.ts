@@ -1,6 +1,5 @@
 import { JSDOM, VirtualConsole } from "jsdom";
 import { readFile, writeFile } from "fs/promises";
-import cors from "cors"; // falls du es später brauchst, sonst kannst du es löschen
 import { type Settings, type WatchList, JsonJob, HtmlJob, type JobDTO } from "./types.js";
 import { parsePrice } from "./utils.js";
 import TelegramBot from "node-telegram-bot-api";
@@ -26,7 +25,7 @@ const settingsPath = path.join(APP_ROOT, "config", "settings.json");
 const watchlistPath = path.join(APP_ROOT, "config", "watchlist.json");
 
 const settings: Settings = JSON.parse(await readFile(settingsPath, "utf-8"));
-const bot = useTelegramBot 
+const bot = useTelegramBot
     ? new TelegramBot(process.env.TOKEN!, { polling: false })
     : null;
 
@@ -42,12 +41,12 @@ virtualConsole.on("error", () => {
 
 async function recreateBrowser() {
     console.log("Recreating entire browser instance");
-    
+
     if (context) {
-        await context.close().catch(() => {});
+        await context.close().catch(() => { });
     }
     if (browser) {
-        await browser.close().catch(() => {});
+        await browser.close().catch(() => { });
     }
 
     browser = await firefox.launch({ headless });
@@ -81,7 +80,7 @@ function logMemory() {
 
 async function start() {
     runCount++;
-    
+
     // Browser alle 15 Durchläufe komplett neu starten
     if (runCount % 15 === 0) {
         await recreateBrowser();
@@ -93,25 +92,27 @@ async function start() {
 
     console.log("-----");
     console.log(
-        "Start run #" + runCount + " at:\t",
-        new Date().toLocaleString("de", {
+        `Start run #${runCount} at: ${new Date().toLocaleString("de", {
             timeZone: "Europe/Berlin",
             timeZoneName: "short",
-        })
+        })}`
     );
     console.log("-----");
 
     for (const item of watchList) {
+        // Fehler pro Item zurücksetzen
+        item.error = null;
+
         if (!item.active) continue;
 
         let page: Page | null = null;
 
         try {
             if (item instanceof JsonJob) {
-                console.log("JSON job:", item.name);
+                console.log(`JSON job: ${item.name}`);
                 page = await context.newPage();
-                await page.goto(item.alertUrl, { waitUntil: "domcontentloaded" });
 
+                // Für JSON-Jobs meist kein Accept-Button nötig → optional
                 if (item.acceptButtonSelector) {
                     try {
                         await page.waitForSelector(item.acceptButtonSelector, {
@@ -126,6 +127,7 @@ async function start() {
 
                 const data = await page.evaluate(async (url: string) => {
                     const res = await fetch(url, { credentials: "include" });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
                     return res.json();
                 }, item.url);
 
@@ -135,18 +137,18 @@ async function start() {
                 });
 
                 if (eval(item.evalCondition)) {
-                    console.log("Condition erfüllt! →", item.alertUrl);
+                    console.log(`Condition erfüllt! → ${item.alertUrl}`);
                     if (useTelegramBot && bot) {
                         await bot.sendMessage(
                             process.env.BOTMESSAGEID!,
                             `Job alert!\n${item.alertUrl}`
-                        );
+                        ).catch(err => console.error("Telegram send failed:", err));
                     }
                 }
             }
 
             if (item instanceof HtmlJob) {
-                console.log("HTML job:", item.name);
+                console.log(`HTML job: ${item.name}`);
                 page = await context.newPage();
                 await page.goto(item.url, { waitUntil: "domcontentloaded" });
 
@@ -173,68 +175,71 @@ async function start() {
                 });
 
                 try {
-                    const document = dom.window.document;
-                    const rawPrice = document.querySelector(item.selector);
+                    const rawPriceElement = dom.window.document.querySelector(item.selector);
+                    const rawText = rawPriceElement?.textContent?.trim() ?? "";
 
-                    const parsedPrice = parsePrice(
-                        rawPrice?.textContent?.trim(),
-                        settings
-                    );
+                    const parsedPrice = parsePrice(rawText, settings);
 
-                    console.log("Parsed price:", parsedPrice);
+                    if (parsedPrice === null || isNaN(parsedPrice) || parsedPrice <= 0) {
+                        console.warn(`Kein gültiger Preis für ${item.name} → "${rawText}"`);
+                        item.error = `Ungültiger Preis: ${rawText}`;
+                        continue;
+                    }
 
-                    if (item.lowestPrice === 0) {
+                    console.log(`Parsed price for ${item.name}: ${parsedPrice}`);
+
+                    if (item.lowestPrice === 0 || item.lowestPrice === null) {
                         item.lowestPrice = 1_000_000;
                     }
 
                     if (parsedPrice < item.lowestPrice) {
                         item.lowestPrice = parsedPrice;
-                        console.log("Neuer Tiefstpreis:", item.lowestPrice);
+                        console.log(`Neuer Tiefstpreis: ${item.lowestPrice}`);
 
                         if (useTelegramBot && bot) {
                             await bot.sendMessage(
                                 process.env.BOTMESSAGEID!,
                                 `Neuer Tiefstpreis für ${item.name} gefunden: ${parsedPrice} EUR\n${item.url}`
-                            );
+                            ).catch(err => console.error("Telegram send failed:", err));
                         }
                     }
                 } catch (error: any) {
                     item.error = error.message;
-                    console.error(`Fehler bei ${item.name}:`, error.message);
+                    console.error(`Fehler beim Parsen für ${item.name}:`, error.message);
 
                     if (useTelegramBot && bot) {
                         await bot.sendMessage(
                             process.env.BOTMESSAGEID!,
                             `Fehler beim Parsen für ${item.name}: ${error.message}\n${item.url}`
-                        );
+                        ).catch(err => console.error("Telegram send failed:", err));
                     }
                 } finally {
-                    if (dom) {
-                        dom.window.close();
-                        (dom as any) = null;
-                        (document as any) = null;
-                    }
+                    dom.window.close();
                 }
             }
         } catch (error: any) {
             item.error = error.message;
-            console.error("Fehler beim Abrufen:", item.url, error.message);
+            console.error(`Fehler beim Abrufen von ${item.url || "unbekannt"}:`, error.message);
         } finally {
             if (page) {
-                await page.close().catch(() => {});
+                await page.close().catch(() => { });
             }
             logMemory();
             console.log("-----");
         }
     }
 
-    await writeFile(
-        watchlistPath,
-        JSON.stringify(watchList, null, 4),
-        "utf-8"
-    );
+    try {
+        await writeFile(
+            watchlistPath,
+            JSON.stringify(watchList, null, 4),
+            "utf-8"
+        );
+        console.log("Watchlist gespeichert.");
+    } catch (err) {
+        console.error("Fehler beim Speichern der Watchlist:", err);
+    }
 
-    // Abschluss-Info pro Run
     console.log(`Run ${runCount} abgeschlossen. Memory: ${Math.round(process.memoryUsage().rss / 1024 / 1024)} MB`);
 }
 
@@ -243,7 +248,7 @@ async function loop() {
         await bot.sendMessage(
             process.env.BOTMESSAGEID!,
             "Price watcher gestartet..."
-        );
+        ).catch(err => console.error("Initial Telegram send failed:", err));
     }
 
     while (true) {
@@ -253,10 +258,11 @@ async function loop() {
             console.error("Watcher crashed:", e);
         }
 
-        await new Promise((r) =>
-            setTimeout(r, settings.intervallInMinutes * 60 * 1000)
-        );
+        await new Promise(r => setTimeout(r, settings.intervallInMinutes * 60 * 1000));
     }
 }
 
-loop().catch(console.error);
+loop().catch(err => {
+    console.error("Fataler Fehler im Haupt-Loop:", err);
+    process.exit(1);
+});

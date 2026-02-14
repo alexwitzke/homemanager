@@ -2,8 +2,8 @@
     {
         "id": 0,
         "name": "AIDA",
-        "active": true,
-        "error": "browserContext.newPage: Target page, context or browser has been closed",
+        "active": false,
+        "error": "page.evaluate: NetworkError when attempting to fetch resource.",
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
         "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
         "acceptButtonSelector": ".sc-gsFSXq.bQcbQg",
@@ -13,9 +13,9 @@
     },
     {
         "id": 1,
-        "name": "Bambu Lab H2C",
+        "name": "Bambu Lab H2C (bambulab store)",
         "active": true,
-        "error": "browserContext.newPage: Target page, context or browser has been closed",
+        "error": null,
         "selector": ".bbl-grey-13.bbl-title-3.font-bold",
         "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
         "acceptButtonSelector": "#truste-consent-button",
@@ -26,7 +26,7 @@
         "id": 3,
         "name": "Idealo Lenovo Monitor",
         "active": true,
-        "error": "browserContext.newPage: Target page, context or browser has been closed",
+        "error": null,
         "selector": ".oopStage-conditionButton-wrapper-text-price",
         "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
         "acceptButtonSelector": "#accept",
@@ -35,13 +35,13 @@
     },
     {
         "id": 4,
-        "name": "Bambu Lab H2C Ultimate",
+        "name": "Bambu Lab H2C (igo3d)",
         "active": true,
-        "error": "browserContext.newPage: Target page, context or browser has been closed",
+        "error": null,
         "selector": ".price.h1",
-        "url": "https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker-plus-ultimate-set",
+        "url": "https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker",
         "acceptButtonSelector": "#consent-banner-btn-all",
         "kind": "HTML",
-        "lowestPrice": 2699
+        "lowestPrice": 2249
     }
 ]

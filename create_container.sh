@@ -19,6 +19,7 @@ docker run -d \
     --name "$container" \
     -v /mnt/user/appdata/homemanager:/app/config \
     -p 3000:3000 \
+    --restart=unless-stopped \
     --log-driver json-file \
     --log-opt max-size=5m \
     --log-opt max-file=3 \
