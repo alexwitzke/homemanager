@@ -14,7 +14,7 @@ let headless = true;
 let useTelegramBot = true;
 
 if (APP_ROOT.endsWith("_watcher")) {
-    headless = false;
+    headless = true;
     useTelegramBot = false;
     dotenv.config({ path: path.join(APP_ROOT, ".env") });
 } else {
@@ -43,19 +43,25 @@ async function recreateBrowser() {
     console.log("Recreating entire browser instance");
 
     if (context) {
-        await context.close().catch(() => { });
+        await context.close().catch(() => {});
     }
     if (browser) {
-        await browser.close().catch(() => { });
+        await browser.close().catch(() => {});
     }
 
     browser = await firefox.launch({ headless });
     context = await browser.newContext({
         locale: "de-DE",
-        userAgent:
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         timezoneId: "Europe/Berlin",
+        extraHTTPHeaders: {
+            "Accept-Language": "de-DE,de;q=0.9,en;q=0.8,en-GB;q=0.7",
+        },
+        userAgent:
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
         viewport: { width: 1366, height: 768 },
+        geolocation: { latitude: 52.5200, longitude: 13.4050, accuracy: 100 },
+        permissions: ["geolocation"],
+        colorScheme: "light",
     });
 }
 
@@ -82,7 +88,7 @@ async function start() {
     runCount++;
 
     // Browser alle 15 Durchläufe komplett neu starten
-    if (runCount % 15 === 0) {
+    if (runCount % 1 === 0) {
         await recreateBrowser();
     }
 

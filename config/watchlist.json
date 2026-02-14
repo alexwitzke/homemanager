@@ -3,7 +3,7 @@
         "id": 0,
         "name": "AIDA",
         "active": false,
-        "error": "page.evaluate: NetworkError when attempting to fetch resource.",
+        "error": null,
         "selector": "$..cabinItemsVariant[?(@.cabinName=='Innenkabine')].lig.prices",
         "url": "https://aida.de/content/aida-search-and-booking/requests/detail.cruise.json/language=de/adults=2/juveniles=0/children=1/babies=0/JourneyIdentifier=PR07260329.json",
         "acceptButtonSelector": ".sc-gsFSXq.bQcbQg",
@@ -20,12 +20,12 @@
         "url": "https://eu.store.bambulab.com/de/products/h2c?id=666136020008767488",
         "acceptButtonSelector": "#truste-consent-button",
         "kind": "HTML",
-        "lowestPrice": 2249
+        "lowestPrice": 2.249
     },
     {
         "id": 3,
         "name": "Idealo Lenovo Monitor",
-        "active": true,
+        "active": false,
         "error": null,
         "selector": ".oopStage-conditionButton-wrapper-text-price",
         "url": "https://www.idealo.de/preisvergleich/OffersOfProduct/201718149_-l32p-30-lenovo.html",
@@ -36,7 +36,7 @@
     {
         "id": 4,
         "name": "Bambu Lab H2C (igo3d)",
-        "active": true,
+        "active": false,
         "error": null,
         "selector": ".price.h1",
         "url": "https://www.igo3d.com/bambu-lab-h2c-combo-3d-drucker",

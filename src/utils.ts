@@ -31,7 +31,6 @@ function parsePrice(raw: string | null | undefined, settings: Settings): number 
 
             try {
                 const normalized = applyRegexRules(match[0], parser.rules);
-                // Zusätzliche Bereinigung: alle Leerzeichen entfernen
                 const cleanNumStr = normalized.replace(/\s/g, "");
 
                 const value = Number(cleanNumStr);
@@ -50,26 +49,34 @@ function parsePrice(raw: string | null | undefined, settings: Settings): number 
     }
 
     // ────────────────────────────────────────────────
-    // Fallback: Intelligente Bereinigung für beide Formate
+    // Verbesserter Fallback – fix für "2,249.00" / "2.249,00"
     // ────────────────────────────────────────────────
     console.debug("Kein Parser-Match → Fallback aktiviert");
 
     let cleaned = input
-        .replace(/[^0-9.,]/g, "")           // nur Zahlen + . ,
-        .replace(/\s+/g, "");               // Leerzeichen weg
+        .replace(/[^0-9.,]/g, "")               // nur Zahlen + . ,
+        .replace(/\s+/g, "");                   // Leerzeichen weg
 
-    // Wenn sowohl Punkt als auch Komma vorhanden → annehmen: Punkt = Tausender, Komma = Dezimal
-    if (cleaned.includes(".") && cleaned.includes(",")) {
-        // Tausender-Punkte entfernen (nur wenn vor genau 3 Ziffern)
-        cleaned = cleaned.replace(/\.(?=\d{3}(?:,|$))/g, "");
-        // Komma zu Dezimalpunkt
-        cleaned = cleaned.replace(/,/g, ".");
+    if (cleaned.includes('.') && cleaned.includes(',')) {
+        // Beide Trenner vorhanden → Format anhand Position/Länge erkennen
+        const lastDotIndex = cleaned.lastIndexOf('.');
+        const lastCommaIndex = cleaned.lastIndexOf(',');
+
+        if (lastDotIndex > lastCommaIndex) {
+            // Punkt ist weiter hinten → wahrscheinlich Dezimalpunkt (US-Format: 2,249.00)
+            cleaned = cleaned.replace(/,/g, '');   // Kommas = Tausender entfernen
+            // Punkt bleibt als Dezimal
+        } else {
+            // Komma ist weiter hinten → wahrscheinlich Dezimalkomma (EU-Format: 2.249,00)
+            cleaned = cleaned.replace(/\./g, '');  // Punkte = Tausender entfernen
+            cleaned = cleaned.replace(/,/g, '.');  // Komma → Dezimalpunkt
+        }
+    } else if (cleaned.includes(',')) {
+        // Nur Komma → EU-Format
+        cleaned = cleaned.replace(/,/g, '.');
+    } else if (cleaned.includes('.')) {
+        // Nur Punkt → US-Format, nichts ändern
     }
-    // Nur Komma → deutsch
-    else if (cleaned.includes(",")) {
-        cleaned = cleaned.replace(/,/g, ".");
-    }
-    // Nur Punkt → US-Format, nichts tun
 
     const fallbackValue = Number(cleaned);
 
@@ -78,7 +85,7 @@ function parsePrice(raw: string | null | undefined, settings: Settings): number 
         return fallbackValue;
     }
 
-    console.warn(`Auch Fallback gescheitert für: "${input}"`);
+    console.warn(`Auch Fallback gescheitert für: "${input}" (cleaned: "${cleaned}")`);
     return null;
 }
 
